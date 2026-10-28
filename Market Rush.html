@@ -1,0 +1,1342 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Market Rush</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&display=swap">
+<style>
+/* Market Rush: a price-board arcade. Colourblind-safe palette (Okabe-Ito): blue for the brand and demand, orange for supply, bluish green and vermillion for right and wrong (always with a tick or cross too), reddish purple for highlights. */
+:root{
+  --bg:#EEF2F8;--panel:#FFFFFF;--panel2:#F6F8FC;--raise:#E2E8F2;--line:#CBD5E3;
+  --ink:#14213D;--soft:#4E5D75;--dim:#7B889D;
+  --accent:#0072B2;--accent2:#005A8C;--onaccent:#FFFFFF;
+  --good:#007A5E;--bad:#C24E00;--onsem:#FFFFFF;
+  --dem:#0072B2;--sup:#C98600;--hl:#A2457F;--onhl:#FFFFFF;
+  --yel:#F0E442;--onyel:#1F1A00;--org:#E69F00;--sky:#56B4E9;--grn:#009E73;--pur:#CC79A7;--ver:#D55E00;
+  --t-mk:#C66A00;--t-cf:#1F7FB8;--t-ds:#0072B2;--t-sh:#A2457F;--t-gv:#8A6D00;
+  --font:"Lexend","Segoe UI",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1726;--panel:#18233A;--panel2:#111B2D;--raise:#22304B;--line:#30415F;
+  --ink:#EEF3FA;--soft:#A9B6CB;--dim:#7686A0;
+  --accent:#56B4E9;--accent2:#8CCDF1;--onaccent:#0B1626;
+  --good:#3CC9A0;--bad:#FF8A4C;--onsem:#0B1626;
+  --dem:#56B4E9;--sup:#F0B43C;--hl:#E58FCB;--onhl:#0B1626;
+  --t-mk:#F0A830;--t-cf:#7CC6F0;--t-ds:#56B4E9;--t-sh:#E58FCB;--t-gv:#F0E442;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1726;--panel:#18233A;--panel2:#111B2D;--raise:#22304B;--line:#30415F;
+  --ink:#EEF3FA;--soft:#A9B6CB;--dim:#7686A0;
+  --accent:#56B4E9;--accent2:#8CCDF1;--onaccent:#0B1626;
+  --good:#3CC9A0;--bad:#FF8A4C;--onsem:#0B1626;
+  --dem:#56B4E9;--sup:#F0B43C;--hl:#E58FCB;--onhl:#0B1626;
+  --t-mk:#F0A830;--t-cf:#7CC6F0;--t-ds:#56B4E9;--t-sh:#E58FCB;--t-gv:#F0E442;color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:17px;line-height:1.5;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+h1,h2,h3{margin:0;line-height:1.15;text-wrap:balance}
+p{margin:0}
+.wrap{max-width:900px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* ticker */
+.ticker{background:var(--panel2);border-bottom:1px solid var(--line);overflow:hidden;white-space:nowrap}
+.track{display:inline-flex;gap:34px;padding-block:8px;animation:tick 48s linear infinite;font-size:14px;font-weight:600;letter-spacing:.04em}
+.track span{color:var(--accent)}
+.track b{color:var(--ink);font-weight:600}
+.track i{font-style:normal}
+.track .u,.track .d{color:var(--soft)}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.track{animation:none}}
+
+/* split-flap title */
+.board{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:4px}
+.word{display:flex;gap:4px}
+.flap{position:relative;width:clamp(34px,7.4vw,62px);height:clamp(48px,10.4vw,86px);background:linear-gradient(var(--raise) 0 50%,var(--panel) 50% 100%);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:clamp(30px,6.6vw,58px);color:var(--accent);box-shadow:inset 0 0 0 1px var(--line);animation:flip .5s cubic-bezier(.3,1.4,.5,1) both}
+.flap::after{content:"";position:absolute;left:0;right:0;top:50%;height:2px;background:var(--bg)}
+@keyframes flip{from{transform:rotateX(80deg);opacity:.2}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.flap{animation:none}}
+
+/* home */
+.home{display:flex;flex-direction:column;gap:22px;padding-block:26px 48px}
+.kick{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--soft)}
+.tagline{font-size:19px;color:var(--soft);max-width:60ch}
+.tagline b{color:var(--ink)}
+.cols{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:760px){.cols{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.lbl{font-size:12.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--soft)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field input{background:var(--panel2);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;font-size:18px;width:100%}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mode{text-align:left;background:var(--panel2);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.mode b{font-size:17px}.mode span{font-size:14px;color:var(--soft)}
+.mode.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.mode.on b{color:var(--accent)}
+.topics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media (max-width:460px){.topics{grid-template-columns:minmax(0,1fr)}}
+.topic{text-align:left;background:var(--panel2);border:1.5px solid var(--line);border-radius:12px;padding:9px 12px;display:flex;flex-direction:column;gap:1px;min-width:0}
+.topic b{font-size:16px}.topic span{font-size:13px;color:var(--dim)}
+.topic.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.topic.on b{color:var(--accent)}
+.go{background:var(--accent);color:var(--onaccent);border:0;border-radius:14px;padding:16px 22px;font-size:22px;font-weight:800;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;gap:10px}
+.go:hover{background:var(--accent2)}
+.hint{font-size:14px;color:var(--dim)}
+.pb{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.pb .v{font-size:34px;font-weight:800;color:var(--accent)}
+.lb{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.lb li{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:10px;align-items:baseline;border-bottom:1px solid var(--line);padding:7px 0;font-size:15px}
+.lb li:last-child{border-bottom:0}
+.lb .r{color:var(--dim);font-weight:700}
+.lb .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb .n small{color:var(--dim);font-size:12.5px;margin-left:6px}
+.lb .s{font-weight:700;color:var(--accent2)}
+.how{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:5px;font-size:15px;color:var(--soft)}
+.how b{color:var(--ink)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.ghost{background:transparent;border:1.5px solid var(--line);border-radius:10px;padding:8px 14px;font-weight:600;font-size:15px}
+.ghost:hover{border-color:var(--soft)}
+details.teach{background:transparent;border:1px dashed var(--line);border-radius:14px;padding:12px 16px}
+details.teach summary{cursor:pointer;font-weight:600;color:var(--soft)}
+.chk{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:8px;margin-top:10px;align-items:center}
+@media (max-width:600px){.chk{grid-template-columns:minmax(0,1fr)}}
+.chk input{background:var(--panel2);border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;font-size:15px;width:100%}
+.chkmsg{font-size:15px;margin-top:8px}
+
+/* play */
+.play{display:flex;flex-direction:column;gap:16px;padding-block:16px 40px}
+.hud{display:grid;grid-template-columns:auto 1fr auto;gap:8px 16px;align-items:center}
+.score{display:flex;flex-direction:column;line-height:1}
+.score .v{font-size:clamp(30px,6vw,44px);font-weight:800;color:var(--accent)}
+.score .l{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--soft);margin-top:4px}
+.mid{display:flex;flex-direction:column;gap:6px;min-width:0}
+.timebar{height:12px;border-radius:99px;background:var(--panel2);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden}
+.timebar i{display:block;height:100%;width:100%;background:var(--accent);border-radius:99px;transition:background .3s}
+.timebar.low i{background:repeating-linear-gradient(45deg,var(--bad) 0 8px,color-mix(in srgb,var(--bad) 55%,var(--panel)) 8px 16px)}
+.meta{display:flex;justify-content:space-between;gap:8px;font-size:14px;color:var(--soft);flex-wrap:wrap}
+.meta .t{font-weight:700;color:var(--ink)}
+.low .t,.meta .t.low{color:var(--bad)}
+.mult{display:flex;flex-direction:column;align-items:flex-end;line-height:1}
+.mult .v{font-size:clamp(26px,5vw,36px);font-weight:800;color:var(--ink)}
+.mult .l{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--soft);margin-top:4px}
+.mult.hot .v{color:var(--accent)}
+.pips{display:flex;gap:4px;margin-top:6px}
+.pips i{width:10px;height:10px;border-radius:3px;background:var(--line)}
+.pips i.on{background:var(--accent)}
+.endbtn{justify-self:start}
+@media (max-width:560px){.hud{grid-template-columns:minmax(0,1fr) auto}.hud .mid{grid-column:1/-1;grid-row:2}}
+.card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px 22px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.card.shake{animation:shake .35s}
+@keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
+@media (prefers-reduced-motion:reduce){.card.shake{animation:none}}
+.qhead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.ttag{font-size:12.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent2)}
+.diff{display:flex;gap:3px;align-items:center;font-size:12.5px;color:var(--dim);font-weight:600}
+.diff i{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.diff i.on{background:var(--accent)}
+.qtext{font-size:clamp(20px,3.2vw,26px);font-weight:600;line-height:1.35}
+.qsub{font-size:16px;color:var(--soft)}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:640px){.opts{grid-template-columns:minmax(0,1fr)}}
+.opt{display:flex;gap:12px;align-items:center;text-align:left;background:var(--panel2);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font-size:17px;line-height:1.35;min-height:58px}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt .k{flex:none;width:28px;height:28px;border-radius:8px;border:1.5px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--soft)}
+.opt.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 14%,var(--panel2))}
+.opt.right .k{border-color:var(--good);color:var(--good)}
+.opt.wrong{border-style:dashed;border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--panel2))}
+.opt.wrong .k{border-color:var(--bad);color:var(--bad)}
+.opt:disabled{cursor:default}
+.bins{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.bins .opt{justify-content:center;font-size:21px;font-weight:700;min-height:84px}
+.bins .opt .k{font-size:16px}
+.split{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:720px){.split{grid-template-columns:minmax(0,1fr)}}
+.split .opts{grid-template-columns:minmax(0,1fr)}
+.split .opt{min-height:48px;padding:9px 12px}
+.fig{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:8px}
+.fig svg{display:block;width:100%;height:auto}
+.fig text{font-family:var(--font)}
+.tapnote{font-size:14px;color:var(--soft);text-align:center;margin-top:6px}
+.arrow-hit{cursor:pointer}
+.arrow-hit:focus-visible{outline:none}
+.arrow-hit:focus-visible .badge{stroke:var(--accent);stroke-width:3}
+.tblwrap{overflow-x:auto}
+table.dt{border-collapse:collapse;width:100%;font-size:16px}
+table.dt th{font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);text-align:left;border-bottom:2px solid var(--line);padding:6px 10px}
+table.dt td{border-bottom:1px solid var(--line);padding:7px 10px}
+table.dt tr.hl td{background:color-mix(in srgb,var(--accent) 16%,transparent);font-weight:700}
+.fb{border-left:4px solid var(--line);padding:4px 0 4px 14px;display:flex;flex-direction:column;gap:6px;font-size:17px}
+.fb.ok{border-color:var(--good)}.fb.no{border-color:var(--bad)}
+.fb .h{font-weight:800;font-size:19px}
+.fb.ok .h{color:var(--good)}.fb.no .h{color:var(--bad)}
+.fb .ans{font-weight:600}
+.fb .why{color:var(--soft)}
+.cont{align-self:flex-start;background:var(--accent);color:var(--onaccent);border:0;border-radius:10px;padding:10px 18px;font-weight:800;font-size:16px}
+.cont:disabled{opacity:.5}
+.float{position:absolute;right:22px;top:-16px;font-size:26px;font-weight:800;color:var(--good);pointer-events:none;animation:rise 1s ease-out forwards}
+.float.minus{color:var(--bad)}
+@keyframes rise{from{transform:translateY(8px);opacity:0}25%{opacity:1}to{transform:translateY(-36px);opacity:0}}
+.banner{position:fixed;left:50%;top:22%;transform:translateX(-50%);z-index:30;background:var(--accent);color:var(--onaccent);font-weight:800;font-size:clamp(22px,4vw,34px);letter-spacing:.04em;border-radius:14px;padding:10px 22px;box-shadow:0 10px 30px rgba(0,0,0,.45);pointer-events:none;animation:pop 1.3s ease-out forwards;white-space:nowrap}
+@keyframes pop{0%{transform:translateX(-50%) scale(.6);opacity:0}15%{transform:translateX(-50%) scale(1.06);opacity:1}75%{opacity:1}100%{transform:translateX(-50%) scale(1);opacity:0}}
+@media (prefers-reduced-motion:reduce){.banner,.float{animation-duration:.01s;animation-delay:0s}}
+.pracbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:15px;color:var(--soft)}
+.pracbar b{color:var(--ink)}
+
+/* results */
+.over{display:flex;flex-direction:column;gap:18px;padding-block:24px 48px}
+.big{font-size:clamp(54px,12vw,96px);font-weight:800;color:var(--accent);line-height:1}
+.rank{font-size:22px;font-weight:700}
+.newpb{align-self:flex-start;background:var(--good);color:var(--onsem);font-weight:800;border-radius:10px;padding:6px 14px;letter-spacing:.04em}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.stat .v{font-size:26px;font-weight:800}
+.stat .l{font-size:12.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--soft)}
+.tbars{display:flex;flex-direction:column;gap:8px}
+.tb{display:grid;grid-template-columns:150px minmax(0,1fr) 60px;gap:10px;align-items:center;font-size:15px}
+@media (max-width:520px){.tb{grid-template-columns:110px minmax(0,1fr) 52px}}
+.tb .bar{height:12px;background:var(--panel2);border-radius:99px;box-shadow:inset 0 0 0 1px var(--line);overflow:hidden}
+.tb .bar i{display:block;height:100%;border-radius:99px;background:var(--accent)}
+.tb .p{text-align:right;color:var(--soft)}
+.revise{border-left:4px solid var(--accent);padding:4px 0 4px 14px}
+.miss{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.miss li{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;font-size:15.5px}
+.miss .q{font-weight:600}
+.miss .a{color:var(--good);font-weight:600}
+.miss .w{color:var(--soft)}
+.code{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;background:var(--panel2);border:1.5px dashed var(--accent);border-radius:14px;padding:12px 16px}
+.code b{font-size:22px;color:var(--accent);letter-spacing:.12em}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:40}
+
+/* right and wrong never rely on colour alone */
+.opt.right,.opt.wrong{border-width:2.5px}
+.opt.right::after,.opt.wrong::after{margin-left:auto;font-weight:800;font-size:15px;white-space:nowrap;padding-left:8px}
+.opt.right::after{content:"\2713  Correct";color:var(--good)}
+.opt.wrong::after{content:"\2717  Your answer";color:var(--bad)}
+.bins .opt.right::after,.bins .opt.wrong::after{margin-left:8px}
+.meta .t.low::after{content:" left: hurry!"}
+.flap{box-shadow:inset 0 0 0 1px var(--line),0 2px 0 var(--line)}
+
+/* leaderboard */
+select{font:inherit;color:inherit;background:var(--panel2);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;font-size:17px;width:100%}
+.field input.bad{border-color:var(--bad);border-style:dashed}
+#nameMsg.bad{color:var(--bad);font-weight:600}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--soft)}
+.live::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--dim)}
+.live.on{color:var(--good)}.live.on::before{background:var(--good);animation:blink 1.6s infinite}
+@keyframes blink{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.live.on::before{animation:none}}
+.tabs{display:flex;gap:6px}
+.tab{background:var(--panel2);border:1.5px solid var(--line);border-radius:99px;padding:5px 14px;font-size:14px;font-weight:600}
+.tab.on{border-color:var(--accent);color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.lb li.me{background:color-mix(in srgb,var(--accent) 12%,transparent);border-radius:8px;padding-inline:6px}
+.lb li.me .n::after{content:"  (you)";color:var(--accent);font-weight:700}
+.lb .r.top{color:var(--accent)}
+.posted{border-left:4px solid var(--accent);padding:4px 0 4px 14px;font-weight:600}
+
+.tagbox{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--panel2);border:1.5px dashed var(--accent);border-radius:12px;padding:10px 12px}
+.ptag{font-size:21px;font-weight:800;color:var(--accent);flex:1;min-width:0}
+.tagother summary{cursor:pointer;font-size:14px;color:var(--soft)}
+.tagother input{flex:1;min-width:0;background:var(--panel2);border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;font-size:16px}
+
+/* interactive rounds */
+.trows{display:flex;flex-direction:column;gap:6px}
+.trow{display:grid;grid-template-columns:28px minmax(0,1fr) minmax(0,1.3fr);gap:12px;align-items:center;text-align:left;background:var(--panel2);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;font-size:16px}
+.trow:hover:not(:disabled){border-color:var(--accent)}
+.trow .k{width:26px;height:26px;border-radius:7px;border:1.5px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--soft)}
+.trow .tb1{font-weight:700}.trow .tb2{color:var(--soft)}
+.trow.right{border-color:var(--good);border-width:2.5px}
+.trow.wrong{border-color:var(--bad);border-style:dashed;border-width:2.5px}
+.trow{position:relative}
+.trow.right .tb1::after{content:"  \2713 Correct";color:var(--good);font-size:14px}
+.trow.wrong .tb1::after{content:"  \2717 Your answer";color:var(--bad);font-size:14px}
+@media (max-width:560px){.trow{grid-template-columns:26px minmax(0,1fr)}.trow .tb2{grid-column:2}}
+.ictl{display:flex;flex-direction:column;gap:12px;min-width:0}
+.readout{font-size:16px;font-weight:600;color:var(--soft)}
+.pbig{font-size:34px;font-weight:800;color:var(--accent);line-height:1}
+.ictl input[type=range]{width:100%;accent-color:var(--accent);height:32px}
+.mvrow{display:grid;grid-template-columns:76px 1fr 1fr;gap:8px;align-items:center}
+.ibtn{background:var(--panel2);border:1.5px solid var(--line);border-radius:10px;padding:9px 10px;font-weight:600;font-size:15px}
+.ibtn:hover:not(:disabled){border-color:var(--accent)}
+.ichk{align-self:stretch;text-align:center}
+.srows{display:flex;flex-direction:column}
+.srow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;align-items:center;border-bottom:1px solid var(--line);padding:9px 0}
+.srow:last-child{border-bottom:0}
+.srow .st{font-size:17px;font-weight:500}
+.srow .seg button{font-size:14.5px;padding:6px 11px}
+.srow .seg button.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--panel));color:var(--accent);font-weight:700}
+.srow .mark2{grid-column:1/-1;font-weight:700;font-size:15px}
+.srow .mark2:empty{display:none}
+.srow.ok .mark2{color:var(--good)}.srow.no .mark2{color:var(--bad)}
+.srow.no{border-left:4px dashed var(--bad);padding-left:10px}.srow.ok{border-left:4px solid var(--good);padding-left:10px}
+@media (max-width:720px){.srow{grid-template-columns:minmax(0,1fr)}}
+.mgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.mcol{display:flex;flex-direction:column;gap:8px}
+.mbtn{display:flex;gap:10px;align-items:center;text-align:left;background:var(--panel2);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;font-size:16px;line-height:1.3;min-height:54px}
+.mbtn .pn{flex:none;width:26px;height:26px;border-radius:50%;border:1.5px dashed var(--line);display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+.mbtn.sel{border-color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.mbtn.paired .pn{border-style:solid;border-color:var(--accent);background:var(--accent);color:var(--onaccent)}
+.mbtn.right{border-color:var(--good);border-width:2.5px}.mbtn.right::after{content:"\2713";margin-left:auto;color:var(--good);font-weight:800}
+.mbtn.wrong{border-color:var(--bad);border-style:dashed;border-width:2.5px}.mbtn.wrong::after{content:"\2717";margin-left:auto;color:var(--bad);font-weight:800}
+@media (max-width:480px){.mbtn{font-size:14.5px;padding:8px 9px}}
+.ichk{align-self:stretch;text-align:center;background:var(--accent);color:var(--onaccent);border:0;border-radius:10px;padding:12px 18px;font-weight:800;font-size:16px}
+.ichk:disabled{background:var(--raise);color:var(--soft);opacity:1;cursor:default}
+.ros{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.ro{border-radius:12px;padding:10px 12px;border:1.5px solid var(--line);display:flex;flex-direction:column;gap:2px;background:var(--panel2)}
+.ro .rk{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--soft)}
+.ro .rv{font-weight:800;font-size:26px;line-height:1.15}
+.ro:first-child .rv{color:var(--dem)}.ro:last-child .rv{color:var(--sup)}
+
+/* accessibility pass: bigger small text, roomier diagrams */
+.hint,.tapnote{font-size:15px}
+.qsub{font-size:17px}
+.lbl,.ttag{font-size:13.5px}
+.srow .seg button,.ibtn,.sitem .seg button{font-size:16px;padding:8px 12px;min-height:44px}
+.opt{font-size:18px;min-height:56px}
+.mbtn,.trow{font-size:17px;min-height:52px}
+.fb{font-size:18px}
+.split.big{grid-template-columns:minmax(0,1.45fr) minmax(0,1fr)}
+@media (max-width:760px){.split.big{grid-template-columns:minmax(0,1fr)}}
+.fig.wide{padding:8px}
+.scrollx{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scrollx svg{min-width:520px}
+.tray{display:flex;flex-wrap:wrap;gap:10px}
+.card2{background:var(--panel);border:2px solid var(--accent);color:var(--accent);border-radius:99px;padding:10px 18px;font-weight:800;font-size:17px;touch-action:none;min-height:48px}
+.card2.sel{background:var(--accent);color:var(--onaccent)}
+.card2.used{opacity:.35;border-style:dashed}
+.ghostcard{position:fixed;z-index:50;transform:translate(-50%,-50%);pointer-events:none;background:var(--accent);color:var(--onaccent);border-radius:99px;padding:10px 18px;font-weight:800;font-size:17px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.slot{cursor:pointer}
+.slot:focus-visible rect{stroke-width:4}
+.steprow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.numin{display:flex;align-items:center;gap:8px}
+.numin .unit{font-size:28px;font-weight:800;color:var(--soft)}
+.numin input{width:100%;max-width:240px;font-size:28px;font-weight:800;padding:10px 14px;border:2px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--ink)}
+.numin input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 30%,transparent)}
+.numin input.right{border-color:var(--good)}.numin input.wrong{border-color:var(--bad);border-style:dashed}
+.ictl.narrow{max-width:420px}
+
+table.dt td{color:var(--ink);font-weight:500}
+table.dt tr.hl td{font-weight:800}
+.narrowonly{display:none}
+@media (max-width:600px){.narrowonly{display:block}}
+
+/* question line on top, the item being judged in its own card underneath */
+.qitem{align-self:stretch;background:var(--panel2);border:2px solid var(--line);border-left:6px solid var(--accent);border-radius:14px;padding:16px 20px;font-size:clamp(21px,3vw,26px);font-weight:700;line-height:1.3;text-wrap:balance}
+
+/* ===== laptop layout: use the whole screen ===== */
+@media (min-width:1000px){
+  .wrap{max-width:1280px}
+  .play{min-height:calc(100vh - 40px);gap:14px;padding-block:14px 20px}
+  .play .card{flex:1;padding:24px 30px;gap:18px}
+  .qtext{font-size:clamp(24px,2.3vw,32px)}
+  .qitem{font-size:clamp(26px,2.5vw,34px);padding:20px 26px}
+  .opts{gap:14px}
+  .opt{font-size:21px;min-height:78px;padding:14px 18px}
+  .opt .k{width:34px;height:34px;font-size:15px}
+  .bins .opt{font-size:28px;min-height:120px}
+  .split.big{grid-template-columns:minmax(0,1.6fr) minmax(320px,1fr);gap:24px}
+  .split{grid-template-columns:minmax(0,1.3fr) minmax(320px,1fr);gap:22px}
+  .split .opt{min-height:60px;font-size:19px}
+  .fig svg{max-height:calc(100vh - 330px);margin-inline:auto}
+  .fig.wide svg{max-height:calc(100vh - 360px)}
+  .scrollx svg{min-width:0}
+  .trow{font-size:20px;min-height:62px;padding:12px 16px}
+  .srow .st{font-size:20px}.srow .seg button{font-size:17px;padding:10px 14px}
+  .mbtn{font-size:19px;min-height:64px}
+  .card2{font-size:19px;padding:12px 22px}
+  .fb{font-size:19px}.fb .h{font-size:22px}
+  .hud .score .v{font-size:48px}.mult .v{font-size:40px}
+  .timebar{height:16px}
+  .endbtn{align-self:flex-start;width:auto;padding:8px 18px}
+  .ictl{gap:14px}.pbig{font-size:44px}.ro .rv{font-size:30px}
+  .numin input{font-size:34px;max-width:300px}
+}
+@media (min-width:1000px) and (max-height:820px){
+  .play .card{padding:18px 26px;gap:14px}
+  .opt{min-height:66px}.bins .opt{min-height:96px}
+  .fig svg{max-height:calc(100vh - 300px)}
+}
+
+@media (min-width:1000px){
+  .play .card>.qhead+*{margin-top:auto}
+  .play .card>#fbBox{margin-bottom:auto}
+  .play .card>.opts .opt{min-height:clamp(66px,12vh,120px)}
+  .cfsplit{grid-template-columns:minmax(0,2.2fr) minmax(240px,1fr)}
+  .cfsplit .tray{flex-direction:column;align-items:stretch}
+  .cfsplit .card2{text-align:center}
+  .fig svg{max-height:calc(100vh - 380px)}
+  .card:has(.qitem) .fig svg{max-height:calc(100vh - 460px)}
+  .fig.wide svg{max-height:calc(100vh - 330px)}
+  .split{align-items:center}
+}
+@media (min-width:1000px) and (max-height:820px){
+  .play{padding-block:10px 12px;gap:10px}
+  .qitem{padding:12px 20px;font-size:26px}
+  .qtext{font-size:26px}
+  .fig svg{max-height:calc(100vh - 420px)}
+  .card:has(.qitem) .fig svg{max-height:calc(100vh - 480px)}
+  .fig.wide svg{max-height:calc(100vh - 360px)}
+  .fig{padding:6px}
+  .split .opt{min-height:52px}
+}
+
+/* ===== fun colour: the full colourblind-safe (Okabe-Ito) set, one colour per topic ===== */
+.flap:nth-child(6n+1){color:var(--t-mk)}.flap:nth-child(6n+2){color:var(--t-sh)}.flap:nth-child(6n+3){color:var(--t-cf)}
+.flap:nth-child(6n+4){color:var(--grn)}.flap:nth-child(6n+5){color:var(--ver)}.flap:nth-child(6n+6){color:var(--t-ds)}
+.word+.word .flap:nth-child(1){color:var(--t-sh)}.word+.word .flap:nth-child(2){color:var(--t-mk)}.word+.word .flap:nth-child(3){color:var(--grn)}.word+.word .flap:nth-child(4){color:var(--t-cf)}
+.go{background:var(--yel);color:var(--onyel);box-shadow:0 4px 0 #B8A800}
+.go:hover{background:#F5EC6E}
+.go:active{transform:translateY(2px);box-shadow:0 2px 0 #B8A800}
+.ichk:not(:disabled),.cont{background:var(--yel);color:var(--onyel);box-shadow:0 3px 0 #B8A800}
+.banner{background:var(--yel);color:var(--onyel);border:3px solid var(--ink)}
+.topic{border-left:6px solid var(--line)}
+.topic[data-t="mk"]{border-left-color:var(--t-mk)}.topic[data-t="cf"]{border-left-color:var(--t-cf)}.topic[data-t="ds"]{border-left-color:var(--t-ds)}.topic[data-t="sh"]{border-left-color:var(--t-sh)}.topic[data-t="gv"]{border-left-color:var(--t-gv)}
+.topic[data-t="all"]{border-left-color:transparent;border-image:linear-gradient(var(--t-mk),var(--t-cf),var(--t-sh),var(--t-gv)) 0 0 0 6}
+.topic.on[data-t="mk"] b{color:var(--t-mk)}.topic.on[data-t="cf"] b{color:var(--t-cf)}.topic.on[data-t="sh"] b{color:var(--t-sh)}.topic.on[data-t="gv"] b{color:var(--t-gv)}
+.mode[data-mode="rush"]{border-left:6px solid var(--org)}.mode[data-mode="prac"]{border-left:6px solid var(--grn)}
+.card[data-t]{border-top:8px solid var(--line)}
+.card[data-t="mk"]{border-top-color:var(--t-mk)}.card[data-t="cf"]{border-top-color:var(--t-cf)}.card[data-t="ds"]{border-top-color:var(--t-ds)}.card[data-t="sh"]{border-top-color:var(--t-sh)}.card[data-t="gv"]{border-top-color:var(--t-gv)}
+.card[data-t="mk"] .ttag{color:var(--t-mk)}.card[data-t="cf"] .ttag{color:var(--t-cf)}.card[data-t="ds"] .ttag{color:var(--t-ds)}.card[data-t="sh"] .ttag{color:var(--t-sh)}.card[data-t="gv"] .ttag{color:var(--t-gv)}
+.card[data-t="mk"] .qitem{border-left-color:var(--t-mk)}.card[data-t="cf"] .qitem{border-left-color:var(--t-cf)}.card[data-t="sh"] .qitem{border-left-color:var(--t-sh)}.card[data-t="gv"] .qitem{border-left-color:var(--t-gv)}
+.hud .score .v{color:var(--t-mk)}
+.mult[data-m="2"] .v{color:var(--t-cf)}.mult[data-m="3"] .v{color:var(--t-sh)}.mult[data-m="4"] .v{color:var(--ver)}
+.pips i.on:nth-child(-n+3){background:var(--t-cf)}.pips i.on:nth-child(n+4):nth-child(-n+6){background:var(--t-sh)}.pips i.on:nth-child(n+7){background:var(--ver)}
+.lb li:nth-child(1) .r.top{background:#F0C419;color:#1F1A00}.lb li:nth-child(2) .r.top{background:#C9D1DB;color:#14213D}.lb li:nth-child(3) .r.top{background:#D9965B;color:#2A1600}
+.lb .r.top{border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:13px}
+.big{color:var(--t-mk)}
+.rank{color:var(--t-sh)}
+.stat:nth-child(1){border-top:5px solid var(--t-cf)}.stat:nth-child(2){border-top:5px solid var(--t-sh)}.stat:nth-child(3){border-top:5px solid var(--org)}
+.pb .v{color:var(--t-mk)}
+.ptag{color:var(--t-sh)}.tagbox{border-color:var(--t-sh)}
+.timebar i{background:linear-gradient(90deg,var(--grn),var(--sky))}
+@media (min-width:1000px){.opts:has(> .opt:nth-child(3):last-child){grid-template-columns:repeat(3,minmax(0,1fr))}
+  .diff i.on{background:var(--t-mk)}}
+
+</style>
+<div class="ticker" aria-hidden="true"><div class="track" id="track"></div></div>
+
+<section id="home" class="wrap home">
+  <div>
+    <p class="kick">Year 8 Economics and Business · Revision</p>
+    <h1 aria-label="Market Rush"><span class="board" id="board"></span></h1>
+  </div>
+  <p class="tagline">Revise <b>markets, the circular flow, demand and supply, shifts and the government</b>. Answer fast, build a streak and climb the <b>Year 8 leaderboard</b>.</p>
+
+  <div class="cols">
+    <div class="panel">
+      <div class="field"><span class="lbl">Your player tag</span>
+        <div class="tagbox"><span class="ptag" id="tagV" aria-live="polite"></span><button class="ghost" type="button" id="tagNew">Get a different tag</button></div>
+        <span class="hint" id="tagMsg">Your secret leaderboard name. No real names are used. Write it in the back of your book so you can use it on another device.</span>
+        <details class="tagother"><summary>Already have a tag? Use it on this device</summary><div class="row" style="margin-top:8px"><input id="tagIn" placeholder="Like Thrifty Quokka 42" autocomplete="off" aria-label="Your player tag"><button class="ghost" type="button" id="tagUse">Use this tag</button></div><p class="hint" id="tagInMsg" aria-live="polite"></p></details>
+      </div>
+      <div class="field"><span class="lbl">Mode</span>
+        <div class="modes" role="radiogroup" aria-label="Mode">
+          <button class="mode on" type="button" data-mode="rush" role="radio" aria-checked="true"><b>Rush</b><span>60 seconds. Right answers add time. High scores count.</span></button>
+          <button class="mode" type="button" data-mode="prac" role="radio" aria-checked="false"><b>Practice</b><span>No clock. Learn from every answer.</span></button>
+        </div>
+      </div>
+      <div class="field"><span class="lbl">Topic</span><div class="topics" id="topics" role="radiogroup" aria-label="Topic"></div></div>
+      <button class="go" type="button" id="playBtn">Play <span aria-hidden="true">&#9654;</span></button>
+      <p class="hint">Keys: 1 to 5 to answer, left and right arrows for two-button questions, Enter to continue.</p>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:18px;min-width:0">
+      <div class="panel" id="glbPanel">
+        <div class="pb"><span class="lbl">Year 8 leaderboard</span><span class="live" id="liveDot">Live</span></div>
+        <p class="hint">Rush mode, all topics. Players show as their tags, so nobody knows who is who. Your best score counts.</p>
+        <div class="tabs" role="tablist"><button type="button" class="tab on" data-p="week" role="tab" aria-selected="true">This week</button><button type="button" class="tab" data-p="all" role="tab" aria-selected="false">All time</button></div>
+        <ol class="lb" id="glb"></ol>
+        <p class="hint" id="glbMsg"></p>
+      </div>
+      <div class="panel">
+        <div class="pb"><span class="lbl">Your best score</span><span class="v" id="pbV">0</span></div>
+        <p class="hint" id="pbWeek">Your best is saved with your player tag, so it comes back even on a different laptop.</p>
+        <span class="lbl">Your best games on this laptop</span>
+        <ol class="lb" id="lb"></ol>
+      </div>
+      <div class="panel">
+        <span class="lbl">How scoring works</span>
+        <ul class="how">
+          <li>Each right answer scores <b>100, 200 or 300</b> by difficulty, plus a <b>speed bonus</b>.</li>
+          <li>Get answers right in a row to raise your <b>multiplier</b>: x2 at 3, x3 at 6, x4 at 10.</li>
+          <li>Right answers add <b>2 seconds</b>. Wrong answers take away <b>4 seconds</b> and reset your streak.</li>
+          <li>Questions get harder the more you get right.</li>
+        </ul>
+        <div class="row"><button class="ghost" type="button" id="sndBtn" aria-pressed="false">Sound: off</button></div>
+      </div>
+    </div>
+  </div>
+
+  <details class="teach">
+    <summary>For teachers</summary>
+    <p class="hint" style="margin-top:8px">Covers SCSA Year 8 Economics and Business: markets and the allocation of resources, the demand and supply model, why governments collect tax, and how governments provide goods and services. Only Rush games on All topics go on the leaderboard. The game collects no names, emails or logins: players get a random tag like "Thrifty Quokka 42", and only the tag, score and question counts are saved.</p>
+    <p class="hint" style="margin-top:8px"><b>Check a score.</b> Students finish a Rush game with a score code. Type the player tag, score and code exactly as shown on their screen.</p>
+    <div class="chk"><input id="ckName" placeholder="Player tag" aria-label="Player tag" autocomplete="off"><input id="ckScore" placeholder="Score" inputmode="numeric" aria-label="Score" autocomplete="off"><input id="ckCode" placeholder="Code" aria-label="Code" autocomplete="off"><button class="ghost" type="button" id="ckBtn">Check</button></div>
+    <p class="chkmsg" id="ckMsg" aria-live="polite"></p>
+  </details>
+</section>
+
+<section id="play" class="wrap play" hidden>
+  <div class="hud" id="hud">
+    <div class="score"><span class="v" id="scV">0</span><span class="l">Score</span></div>
+    <div class="mid" id="timeWrap">
+      <div class="timebar" id="tbar"><i id="tfill"></i></div>
+      <div class="meta"><span class="t" id="tV">60s</span><span id="qCount">Question 1</span></div>
+    </div>
+    <div class="mult" id="multBox"><span class="v" id="mV">x1</span><span class="l">Streak <span id="stV">0</span></span><span class="pips" id="pips" aria-hidden="true"></span></div>
+  </div>
+  <div class="pracbar" id="pracbar" hidden><span>Practice: <b id="prV">0 right out of 0</b></span><button class="ghost" type="button" id="finBtn">Finish practice</button></div>
+  <div class="card" id="card" aria-live="polite"></div>
+  <button class="ghost endbtn" type="button" id="quitBtn">Quit to menu</button>
+</section>
+
+<section id="over" class="wrap over" hidden></section>
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<script>
+/* ===== Live leaderboard settings. Leave the first two blank to switch the leaderboard off. ===== */
+var CONFIG={
+  supabaseUrl:"https://ugepldpvoexsonszxiuq.supabase.co",               // your Supabase project URL, like https://abcdefgh.supabase.co
+  supabaseKey:"sb_publishable_H3cZXQwi9YFAVgtgz32d7A_-MRo6Hcu",               // the project's anon public key (safe to publish: the database rules limit what it can do)
+  table:"market_rush_scores",
+  tagsTable:"market_rush_tags"
+};
+
+/* ===== Question bank: Year 8 Economics and Business (SCSA HASS 2026). Every question stands on its own: no class case studies needed. ===== */
+var TOPICS={mk:"Markets",cf:"Circular flow",ds:"Demand and supply",sh:"Shifts",gv:"Government"};
+var LESSONS={mk:"Labour, housing, shares and foreign exchange",cf:"Households, businesses, banks and government",ds:"Demand, supply, equilibrium, surplus and shortage",sh:"What moves the curves, and what happens next",gv:"Taxes, spending and why governments step in"};
+var BANK=[];
+function mc(t,d,q,o,why,x){var it={k:"mc",t:t,d:d,q:q,o:o,a:0,why:why};if(x)for(var k in x)it[k]=x[k];BANK.push(it)}
+function bin(t,d,q,o,a,why){BANK.push({k:"bin",t:t,d:d,q:q,o:o,a:a,why:why})}
+function tf(t,d,q,yes,why){bin(t,d,q,["True","False"],yes?0:1,why)}
+
+/* ---------- Markets ---------- */
+mc("mk",1,"What is a market?",["Any place or system where buyers and sellers swap things for a price","Only a building where food is sold","A shop owned by the government","A list of prices in a catalogue"],"A market does not need a building. eBay and the stock exchange are markets too.");
+tf("mk",1,"eBay is a market, even though you cannot walk into it.",true,"A market is any place or system where buyers and sellers swap things for a price. It can be online.");
+tf("mk",1,"A school canteen is a market.",true,"Students buy, the canteen sells, and the prices are on the board.");
+mc("mk",1,"In the labour market, what is the price called?",["A wage or salary","Rent","The exchange rate","A share price"],"Workers sell their time and skills. The price they are paid is a wage or salary.");
+mc("mk",1,"In the housing market, what is the price called?",["A house price or weekly rent","A wage","A dividend","The exchange rate"],"Homes are bought, sold and rented. Renters pay rent for the use of a home.");
+mc("mk",1,"On the stock exchange, what is the price called?",["The share price","Rent","A wage","GST"],"Shares in companies are bought and sold. The price of one share is the share price.");
+mc("mk",1,"In the foreign exchange market, what is the price called?",["The exchange rate","The share price","Interest","Rent"],"The exchange rate is how much of another currency one Australian dollar buys.");
+bin("mk",1,"A 15-year-old gets their first job. In the labour market, they are the...",["Buyer","Seller"],1,"They sell their time and skills. The employer buys them and pays a wage.");
+bin("mk",1,"A supermarket hires a new worker. In the labour market, the supermarket is the...",["Buyer","Seller"],0,"Employers buy labour. Workers sell it.");
+bin("mk",1,"A family rents a house. In the housing market, the family is the...",["Buyer","Seller"],0,"Renters pay for the use of a home, so they are buyers. The landlord is the seller.");
+bin("mk",2,"A tourist from Japan arrives in Perth and swaps yen for Australian dollars. They are ___ Australian dollars.",["Buying","Selling"],0,"They buy Australian dollars and sell Japanese yen to pay for them. Every currency swap buys one currency and sells another.");
+bin("mk",2,"A superannuation fund buys shares in a mining company. On the stock exchange, the super fund is the...",["Buyer","Seller"],0,"Investors, like families and super funds, buy shares.");
+mc("mk",1,"Which market? An investor buys shares in a company.",["Stock exchange","Labour market","Housing market","Foreign exchange market"],"Shares are small pieces of ownership in a company. They are traded on the stock exchange.");
+mc("mk",1,"Which market? A landlord puts up the weekly rent on a house.",["Housing market","Labour market","Stock exchange","Foreign exchange market"],"Rent is the price in the housing market.");
+mc("mk",2,"Which market? A business swaps Australian dollars for US dollars to pay for goods from America.",["Foreign exchange market","Stock exchange","Labour market","Housing market"],"Swapping one currency for another happens in the foreign exchange (forex) market.");
+mc("mk",2,"Which market? A nurse moves to a mining town because the wages are higher.",["Labour market","Housing market","Stock exchange","Foreign exchange market"],"Wages are the price in the labour market. Higher wages move workers to where they are needed.");
+mc("mk",1,"In the labour market, who are the buyers?",["Employers, like businesses and governments","Workers","Shoppers","Banks"],"Employers buy workers' time and skills. Workers are the sellers.");
+mc("mk",2,"What is a share?",["A small piece of ownership in a company","A loan to a bank","A type of tax","A discount coupon"],"Buying a share makes you a part owner of the company.");
+mc("mk",2,"What is a dividend?",["An owner's part of a company's profit","The price of one share","A tax on companies","The interest a bank charges"],"Shareholders own part of the company, so they can receive part of the profit as a dividend.");
+mc("mk",2,"What is Australia's main stock exchange called?",["The ASX","The ATO","The RBA","The GST"],"ASX stands for Australian Securities Exchange. The ATO collects tax and the RBA is the Reserve Bank.");
+mc("mk",3,"A company's share price rises today as investors trade shares with each other. Does the company get that extra money?",["No. The trades are between investors swapping shares they already own","Yes. Every trade pays the company","Yes. The government pays it","Only if the price doubles"],"A company only gets money when it first sells new shares.");
+mc("mk",2,"Who sets the value of the Australian dollar?",["Buyers and sellers in the foreign exchange market","The Prime Minister","The stock exchange","The Australian Taxation Office"],"The Australian dollar has floated since 1983. Demand and supply set its value.");
+mc("mk",2,"What does interdependence mean?",["Parts of the economy rely on each other, so a change in one affects the others","Every market works on its own","The government controls every market","Prices never change"],"One change in one industry can move prices in many markets.");
+mc("mk",3,"China orders far more iron ore from WA mines for the next two years. What is likely to happen to rents in WA mining towns?",["They rise","They fall","They stay the same"],"Mines hire more workers who need homes. Homes cannot be built quickly, so demand for rentals rises faster than supply.");
+mc("mk",3,"China orders far more iron ore from WA mines. What is likely to happen to wages for mining workers?",["They rise","They fall","They stay the same"],"Mines need more workers. If there are not enough with the right skills, they offer higher wages.");
+mc("mk",3,"China orders far more iron ore from WA mines. Miners are paid in US dollars but pay their workers in Australian dollars. What happens to the value of the Australian dollar?",["It rises","It falls","It stays the same"],"Miners swap US dollars into Australian dollars, so demand for the Australian dollar rises.");
+mc("mk",3,"China orders far more iron ore from WA mines. What is likely to happen to the share prices of mining companies?",["They rise","They fall","They stay the same"],"Investors expect bigger profits, so more want to buy the shares than sell them.");
+mc("mk",2,"In a market, what is the signal that moves resources to where buyers want them?",["Price","The weather","Advertising","The time of day"],"When something is scarce, its price rises, and resources move towards it.");
+mc("mk",3,"The exchange rate is A$1 = US$0.69. What does this tell you?",["One Australian dollar buys 69 US cents","One share costs 69 cents","The interest rate is 69%","You pay 69 cents tax per dollar"],"The exchange rate is how much of another currency one Australian dollar buys.");
+mc("mk",3,"Interest rates rise, so home loans cost more. What is likely to happen to house prices?",["They fall","They rise","They stay the same"],"Interest is the extra cost of borrowing. Dearer loans mean fewer people can borrow to buy, so demand for homes falls.");
+
+/* ---------- Circular flow ---------- */
+var ARW=[null,
+ {n:1,name:"Resources",from:"Households",to:"Businesses",money:false,why:"Households provide labour, land, capital and enterprise to businesses."},
+ {n:2,name:"Income",from:"Businesses",to:"Households",money:true,why:"Businesses pay households for their resources, mostly as wages."},
+ {n:3,name:"Output (goods and services)",from:"Businesses",to:"Households",money:false,why:"Businesses make goods and services and sell them to households."},
+ {n:4,name:"Expenditure",from:"Households",to:"Businesses",money:true,why:"Households spend money buying goods and services from businesses."},
+ {n:5,name:"Savings",from:"Households",to:"Financial sector",money:true,why:"Money households keep instead of spending goes to a bank or super fund."},
+ {n:6,name:"Investment",from:"Financial sector",to:"Businesses",money:true,why:"Banks lend savings to businesses so they can grow."},
+ {n:7,name:"Taxes",from:"Households",to:"Government",money:true,why:"Households must pay taxes, such as income tax and GST, to the government."},
+ {n:8,name:"Government spending",from:"Government",to:"Businesses",money:true,why:"The government spends on things we all use, often paying businesses to build them."}];
+var TAPS=[
+ ["A business pays a worker their weekly wage.",2],["A family buys groceries at the supermarket.",4],["A worker gives their time and skills (labour) to a business.",1],["A shop sells a family a new fridge.",3],
+ ["A household puts $150 into a bank account.",5],["A bank lends a local bakery $80,000 for a new oven.",6],["Income tax comes out of a worker's pay.",7],["The government pays a building company to build a new hospital.",8],
+ ["A shopper pays GST on a new pair of shoes.",7],["A family puts money into a superannuation fund.",5]];
+mc("cf",1,"Which of these is NOT one of the four sectors in the four-sector circular flow model?",["Schools","Households","Businesses","Government"],"The four sectors are households, businesses, the financial sector and the government.");
+mc("cf",1,"Which sector is a bank in?",["Financial sector","Households","Businesses","Government"],"Banks and super funds keep people's savings and lend money out.");
+mc("cf",1,"Which sector is your family in?",["Households","Businesses","Financial sector","Government"],"Households are people and families. They earn income, spend, save and pay tax.");
+mc("cf",1,"Which sector collects taxes and spends them on roads, schools and hospitals?",["Government","Businesses","Households","Financial sector"],"The government collects taxes and spends them on things we all use.");
+mc("cf",1,"Which sector makes goods and services and sells them to make a profit?",["Businesses","Households","Government","Financial sector"],"Businesses use resources to produce goods and services, and pay wages.");
+mc("cf",2,"A superannuation fund looks after workers' retirement savings and invests them. Which sector is it in?",["Financial sector","Government","Households","Businesses"],"Super funds, like banks, are part of the financial sector.");
+mc("cf",2,"The resources households give businesses are...",["Labour, land, capital and enterprise","Only money","Taxes and GST","Shares and dividends"],"Labour is work, capital is tools and machines, and enterprise is ideas and risk-taking.");
+mc("cf",2,"In the circular flow, investment means...",["Money lent to businesses so they can grow","Buying a lotto ticket","Money paid in tax","A family's weekly shopping"],"Here, investment means a business borrowing to grow, such as buying new machines.");
+mc("cf",3,"Interest rates rise, so saving pays more and borrowing costs more. Which flow is likely to grow?",["Household savings going to banks","Banks lending to businesses","Household spending at businesses","Wages paid to households"],"Households save more because saving pays more. Borrowing costs more, so lending to businesses shrinks.");
+mc("cf",3,"A big mine closes and hundreds of workers lose their jobs. Which flow shrinks first?",["Income paid to households","Government spending","Household savings grow","Taxes grow"],"Then household spending shrinks too, because those families have less to spend in local shops.");
+mc("cf",3,"The government cuts income tax rates. What happens to the flow of taxes from households to the government?",["It shrinks","It grows","It stays the same"],"Households pay less tax, so they have more to spend at businesses.");
+mc("cf",3,"A household saves money in a bank instead of spending it. Is that bad for businesses?",["Not really. The bank lends those savings to businesses","Yes. The money disappears","Yes. Banks keep savings locked in a vault","It goes straight to the government"],"The money still reaches businesses, just by a different path: savings, then investment.");
+mc("cf",2,"Why would a small bakery borrow from a bank?",["To pay for something big, like an $80,000 oven","To pay its GST","To set its prices","To find customers"],"One week of sales cannot pay for a big oven, so the bakery borrows. That is investment.");
+mc("cf",1,"The circular flow model shows that the four sectors are...",["Interdependent: they rely on each other","Independent: they never affect each other","All run by the government","Only about banks"],"Change one flow and the others move too.");
+mc("cf",3,"The government pays a building company to build a new hospital. Why does household income grow too?",["The building company hires more workers and pays more wages","Patients pay more tax","Banks lend less","Households save less"],"Government spending ends up as income for households.");
+
+/* ---------- Demand and supply ---------- */
+mc("ds",1,"Demand is the amount consumers are ___ to buy at each price.",["Willing and able","Told","Not allowed","Paid"],"You need both: you want it enough to pay that price, and you can afford it.");
+bin("ds",1,"You want $300 sneakers but only have $50. Is that demand?",["Demand","Not demand"],1,"Demand needs willing AND able. Wanting something you cannot afford is not demand.");
+mc("ds",1,"The law of demand: when the price goes up, the quantity demanded...",["Falls","Rises","Stays the same"],"Price and quantity demanded move in opposite directions.");
+mc("ds",1,"The law of supply: when the price goes up, the quantity supplied...",["Rises","Falls","Stays the same"],"Price and quantity supplied move in the same direction, because a higher price means more profit.");
+mc("ds",1,"Which way does a demand curve slope?",["Down from left to right","Up from left to right","It is flat","Straight up"],"Higher price, fewer bought. So demand slopes down.");
+mc("ds",1,"Which way does a supply curve slope?",["Up from left to right","Down from left to right","It is flat","Straight down"],"Higher price, more supplied. So supply slopes up.");
+mc("ds",2,"Why do businesses supply more at a higher price?",["They make more profit on each item","Customers ask them to","The government tells them to","Their costs go down"],"Profit per item = price minus cost per item.");
+mc("ds",2,"Which is a reason people buy less when the price rises?",["They swap to a cheaper substitute","The supply curve moves","Shops close","The government says so"],"Three reasons: your budget, substitutes, and whether it is still worth it.");
+mc("ds",1,"Where the demand and supply curves cross is called the...",["Equilibrium","Surplus","Shortage","Profit"],"At equilibrium, quantity demanded equals quantity supplied.");
+mc("ds",2,"If the price is ABOVE equilibrium, there is a...",["Surplus: too much","Shortage: not enough","Equilibrium","Profit"],"Sellers offer more than buyers want. Surplus = too much.");
+mc("ds",2,"If the price is BELOW equilibrium, there is a...",["Shortage: not enough","Surplus: too much","Equilibrium","Loss"],"Buyers want more than sellers offer. Shortage = short of stock.");
+mc("ds",2,"There is a surplus. What do sellers usually do?",["Cut the price","Raise the price","Make even more","Close down forever"],"Unsold stock is wasted money, so sellers cut the price until it reaches equilibrium.");
+mc("ds",2,"There is a shortage. What do sellers usually do?",["Raise the price","Cut the price","Make less","Give it away"],"Queues form and it sells out, so sellers realise they can charge more.");
+mc("ds",2,"How do you work out the size of a surplus?",["Quantity supplied minus quantity demanded","Quantity demanded minus quantity supplied","Price minus cost","Price times quantity"],"Take the smaller number from the bigger one, and say the size, for example a surplus of 200.");
+mc("ds",3,"Concert tickets sell out in three minutes, then get resold online for double the price. The original price was...",["Too low","Too high","Just right"],"Far more people wanted tickets than there were seats at that price: a shortage.");
+mc("ds",3,"Bird flu cut egg supply, and supermarkets limited shoppers to two cartons each. What do purchase limits tell you?",["There is a shortage: the price is below equilibrium","There is a surplus","Eggs are at equilibrium","Nobody wants eggs"],"Purchase limits, empty shelves and queues are all signs of a shortage.");
+mc("ds",3,"A gold mine closed when gold prices were low. Years later the price of gold rose a lot, and the mine reopened. Which idea explains this?",["The law of supply: a higher price makes it worth producing","The law of demand","A surplus of gold","Interdependence"],"At a higher price, producing becomes profitable, so more is supplied.");
+tf("ds",2,"At equilibrium, everyone who wants one gets one.",false,"Not quite: everyone who is willing and able to pay the equilibrium price gets one.");
+
+/* ---------- Shifts ---------- */
+var SHIFTS=[
+ [1,"A heatwave hits Perth. What happens in the market for cold drinks?","DR","Hot weather makes buyers want more cold drinks at every price: demand increases."],
+ [1,"A cold, rainy week in Perth. What happens in the market for ice cream?","DL","Buyers want less ice cream at every price: demand decreases."],
+ [2,"A new bubble tea shop opens next door to another bubble tea shop. What happens in the bubble tea market?","SR","Trap! A shop is a seller. More sellers means more supply at every price."],
+ [2,"The ingredients for bubble tea double in price. What happens in the bubble tea market?","SL","Ingredients are a production cost. Each cup earns less profit, so less is supplied at every price."],
+ [2,"A café raises the price of its coffee from $5 to $6. What happens in the coffee market?","N","The product's own price changed, so we slide along the demand curve. Fewer coffees are bought, but no curve moves."],
+ [1,"A new snack goes viral on TikTok. What happens in the market for that snack?","DR","It becomes popular, so buyers want more at every price."],
+ [1,"A new machine makes pizzas twice as fast and cheaper. What happens in the pizza market?","SR","Cheaper to make, so sellers supply more at every price."],
+ [2,"Café workers get a big pay rise. What happens in the market for café meals?","SL","Wages are a production cost. Higher costs mean less supplied at every price."],
+ [3,"Smoothies get much cheaper. What happens in the market for milkshakes?","DL","A smoothie is a substitute. When it gets cheaper, some buyers swap away from milkshakes."],
+ [1,"Bird flu: over a million egg-laying hens are destroyed. What happens in the egg market?","SL","Disease destroys animals, so farms have fewer eggs to sell at every price."],
+ [1,"A cyclone destroys most of Queensland's banana farms. What happens in the banana market?","SL","Bad weather destroys crops, so fewer bananas are offered at every price."],
+ [2,"Thousands more people move to Perth. What happens in the rental market?","DR","More people need homes, so more renters want homes at every price."],
+ [2,"A shop cuts the price of its sneakers from $150 to $120. What happens in the sneaker market?","N","Its own price changed, so we slide along the demand curve. More pairs are bought, but no curve moves."],
+ [2,"Two bakeries in the area close down. What happens in the local bread market?","SL","Fewer sellers means less supply at every price."],
+ [3,"The government adds a new tax on sugary drinks. What happens in the soft drink market?","SL","A tax adds to the sellers' costs, so less is supplied at every price."],
+ [3,"Gaming consoles get much cheaper. What happens in the market for video games?","DR","Games and consoles are complements. More people buy consoles, so they want more games."],
+ [2,"A news story says energy drinks are bad for teenagers. What happens in the energy drink market?","DL","Buyers want less at every price after bad news."],
+ [2,"Perfect weather gives strawberry farmers a huge crop. What happens in the strawberry market?","SR","Good weather means more strawberries offered at every price."],
+ [2,"People get a big pay rise. What happens in the market for concert tickets?","DR","People earn more, so they can afford more tickets at every price."],
+ [2,"Milk gets much cheaper for cafés to buy. What happens in the market for milkshakes?","SR","Lower production costs mean more profit per milkshake, so more is supplied at every price."]];
+var SHIFT_OUT={DR:["rises","rises"],DL:["falls","falls"],SR:["falls","rises"],SL:["rises","falls"]};
+var SHIFT_NAME={DR:"Demand increases: the curve shifts right",DL:"Demand decreases: the curve shifts left",SR:"Supply increases: the curve shifts right",SL:"Supply decreases: the curve shifts left",N:"No shift: slide along the curve"};
+mc("sh",1,"Demand and supply curves only shift...",["Left or right","Up or down","Diagonally","They never move"],"Right is more, left is less. Never draw a curve moving up or down.");
+mc("sh",1,"An increase in demand shifts the demand curve...",["Right","Left","Up","Down"],"More wanted at every price means further right on the quantity axis.");
+mc("sh",1,"A decrease in supply shifts the supply curve...",["Left","Right","Up","Down"],"Less offered at every price means further left on the quantity axis.");
+mc("sh",2,"On a demand and supply graph, what does D2 usually mean?",["The new demand curve after a change","The second customer","Demand at $2","Double the demand"],"1 means before and 2 means after. D1 is the old curve, D2 the new one.");
+mc("sh",2,"On a demand and supply graph, what does E1 usually mean?",["The original equilibrium, before a change","The first customer","An error","Equal supply"],"E2 is the new equilibrium after the change.");
+bin("sh",2,"The product's own price changes. Do we slide along the curve or shift it?",["Slide along","Shift"],0,"A change in the product's own price = slide along. Anything else changing = shift.");
+bin("sh",1,"A new shop opens. Does that change demand or supply?",["Demand","Supply"],1,"A shop is a seller, so it changes supply, even though it sounds like more customers.");
+bin("sh",1,"People earn more money. Does that change demand or supply?",["Demand","Supply"],0,"Income affects buyers, so it changes demand.");
+bin("sh",1,"It costs more to make the product. Does that change demand or supply?",["Demand","Supply"],1,"Production costs affect sellers, so they change supply.");
+bin("sh",1,"Something goes viral and becomes popular. Does that change demand or supply?",["Demand","Supply"],0,"Popularity changes what buyers want, so it changes demand.");
+bin("sh",2,"A similar product gets cheaper. Does that change demand or supply?",["Demand","Supply"],0,"Buyers can swap to the cheaper substitute, so demand changes.");
+bin("sh",1,"Bad weather destroys crops. Does that change demand or supply?",["Demand","Supply"],1,"Sellers have less to sell, so supply changes.");
+mc("sh",2,"When SUPPLY shifts, the equilibrium price and quantity move...",["In opposite directions","In the same direction","Not at all"],"Demand shifts move price and quantity the same way. Supply shifts move them opposite ways.");
+mc("sh",2,"When DEMAND shifts, the equilibrium price and quantity move...",["In the same direction","In opposite directions","Not at all"],"Demand up: both rise. Demand down: both fall.");
+mc("sh",2,"Demand increases. What happens to the equilibrium price and quantity?",["Price rises, quantity rises","Price falls, quantity falls","Price rises, quantity falls","Price falls, quantity rises"],"Demand shifts right, so the curves cross higher and further right.");
+mc("sh",2,"Supply decreases. What happens to the equilibrium price and quantity?",["Price rises, quantity falls","Price falls, quantity rises","Both rise","Both fall"],"Supply shifts left: things are scarcer, so the price rises and fewer are sold.");
+mc("sh",2,"Supply increases. What happens to the equilibrium price and quantity?",["Price falls, quantity rises","Price rises, quantity falls","Both rise","Both fall"],"Supply shifts right: more on offer, so the price falls and more are sold.");
+mc("sh",2,"Demand decreases. What happens to the equilibrium price and quantity?",["Price falls, quantity falls","Price rises, quantity rises","Price rises, quantity falls","Price falls, quantity rises"],"Demand shifts left, so the curves cross lower and further left.");
+mc("sh",2,"What is a complement?",["A product used together with another, like games and a console","A product used instead of another","A free gift","A compliment from a customer"],"A substitute is used instead of another, like a smoothie instead of a milkshake.");
+mc("sh",2,"What is a substitute?",["A product used instead of another, like a smoothie instead of a milkshake","A product used together with another","A cheaper brand of the same shop","A product the government provides"],"When a substitute gets cheaper, demand for the other product falls.");
+
+/* ---------- Government ---------- */
+var WHY3="Governments step into markets for three reasons: to provide things the market does not supply enough of, to reduce things that cause harm, or to make things fairer.";
+mc("gv",1,"Which of these is NOT a reason governments get involved in markets?",["To set the price of every product in every shop","To provide things the market does not supply enough of","To reduce things that cause harm","To make things fairer"],"Most prices are set by demand and supply. "+WHY3);
+mc("gv",1,"Why would a business not build street lights?",["It is hard to make each person who uses them pay","Street lights are against the law","Nobody needs street lights","They are too bright"],"A business cannot charge every person who walks under a light, so the government provides them.");
+var JOBS=[["The government builds and fixes local roads.",0,"Roads are hard to charge each user for, so the government provides them."],["Cigarettes have a large extra tax added to their price.",1,"A higher price means people smoke less."],["Medicare pays most of the cost of seeing a doctor.",2,"It means everyone can afford to see a doctor."],["The Australian Defence Force protects the country.",0,"No business could sell defence to each person, so the government provides it."],["Families get a payment to help with the cost of school.",2,"It helps families afford the basics."],["You must be 18 to buy alcohol.",1,"A law that keeps a harmful product away from young people."]];
+var JOBN=["Provide what the market does not supply enough of","Reduce harm","Make things fairer"];
+JOBS.forEach(function(j){var o=[JOBN[j[1]]].concat(JOBN.filter(function(x,i){return i!==j[1]}));mc("gv",1,"Governments get involved in markets to provide, to reduce harm, or to make things fairer. Which reason is this? "+j[0],o,j[2])});
+mc("gv",1,"What is a tax?",["Money people and businesses must pay the government, by law","A donation you can choose to give","Money the government pays you","A discount at the shops"],"All the money the government collects from taxes is called tax revenue.");
+mc("gv",1,"How much GST is added to the price of most things we buy in Australia?",["10%","15%","30%","50%"],"Fresh food, most health care and education have no GST.");
+mc("gv",1,"Who pays company tax?",["Businesses, on their profit","Workers, on their wages","Shoppers, on what they buy","Tourists"],"Large companies pay 30% of their profit. Smaller companies pay 25%.");
+mc("gv",2,"Which tax brings in the most money for the Australian Government?",["Income tax","GST","Company tax","Tax on fuel"],"Income tax paid by workers brings in almost half of all the money the government collects.");
+mc("gv",2,"Why does the government put a big extra tax on cigarettes?",["To make them dearer, so people buy fewer","To help tobacco companies","Because cigarettes are a basic need","To make them cheaper"],"This is the government reducing harm.");
+mc("gv",1,"In Australia, the first $18,200 a person earns each year is...",["Tax-free","Taxed at 15 cents per dollar","Taxed at 45 cents per dollar","Taxed at 10%"],"$18,200 is the tax-free threshold.");
+mc("gv",2,"Use the tax table. Someone earns $40,000 a year. How much tax do they pay on each dollar over $18,200?",["15 cents","Nothing","30 cents","45 cents"],"$40,000 is in the $18,201 to $45,000 row, taxed at 15 cents for each dollar over $18,200.",{showTax:true});
+mc("gv",2,"Which area gets the biggest share of Australian Government spending?",["Social security and welfare","Defence","Education","Health"],"Payments like the Age Pension, JobSeeker and family payments are the biggest area.");
+mc("gv",1,"The WA Government pays for students to travel free on Transperth to and from school. This is an example of...",["Government spending","Taxation","Company tax","A market price"],"Money is going out from the government, so it is spending.");
+var TS=[["GST","Tax"],["Medicare","Spending"],["Income tax","Tax"],["The Age Pension","Spending"],["Company tax","Tax"],["Free TAFE courses","Spending"],["Tax on petrol","Tax"],["Building a new hospital","Spending"],["JobSeeker payments","Spending"],["Paying for the Defence Force","Spending"],["Extra tax on cigarettes","Tax"]];
+
+mc("gv",2,"In WA, which level of government runs public hospitals, public schools and Transperth?",["State (WA Government)","Federal (Australian Government)","Local (your council)"],"The WA Government is based in Perth.");
+mc("gv",2,"Which level of government collects rates and empties your bins?",["Local (your council)","State (WA Government)","Federal (Australian Government)"],"Councils pay for bins, parks, libraries and local roads.");
+mc("gv",2,"Which level of government runs Medicare, defence and the Age Pension?",["Federal (Australian Government)","State (WA Government)","Local (your council)"],"The federal government in Canberra also collects income tax, company tax and GST.");
+mc("gv",2,"Medicare is mainly an example of the government...",["Making things fairer through spending","Collecting tax revenue","Reducing harmful products","Setting prices"],"Medicare uses tax money so everyone can afford health care.");
+var AREAS=[["A new hospital wing with 100 more beds","Health"],["Free bus trips for students to and from school","Transport"],["The Age Pension for older Australians","Welfare"],["Free TAFE courses","Education"],["Cheaper medicines through Medicare","Health"],["Fixing roof leaks at a public primary school","Education"],["Building a new road interchange","Transport"],["JobSeeker payments for people looking for work","Welfare"]];
+var AN=["Health","Education","Transport","Welfare"];
+
+mc("gv",3,"A pie costs $5.50, and that includes 10% GST. How much of the $5.50 is GST?",["$0.50","$0.55","$5.00","$0.05"],"$5.00 plus 10% GST ($0.50) = $5.50.");
+mc("gv",3,"The government builds a new public hospital. This is mainly an example of the government...",["Providing a service the market would not supply enough of","Collecting tax","Reducing a harmful product","Running a private business"],"Public hospitals give everyone access to treatment.");
+mc("gv",2,"What percentage of their profit do large companies pay in company tax?",["30%","10%","45%","Nothing"],"Smaller companies pay 25%.");
+
+/* ===== More questions, plus sets for the sorting and matching rounds ===== */
+/* Markets */
+mc("mk",1,"Which market? A worker in a mining town asks for a pay rise.",["Labour market","Housing market","Stock exchange","Foreign exchange market"],"Pay is the price of labour.");
+mc("mk",1,"Which market? A first home buyer buys an apartment.",["Housing market","Labour market","Stock exchange","Foreign exchange market"],"Homes are bought, sold and rented in the housing market.");
+mc("mk",1,"Which market? A family swaps Australian dollars for Japanese yen before a holiday.",["Foreign exchange market","Housing market","Stock exchange","Labour market"],"Swapping currencies happens in the foreign exchange market.");
+mc("mk",2,"Which market? A company sells new shares to raise money for a new factory.",["Stock exchange","Labour market","Foreign exchange market","Housing market"],"Selling new shares moves savings from investors to the company.");
+mc("mk",1,"Which market? A café owner hires a barista.",["Labour market","Housing market","Stock exchange","Foreign exchange market"],"The café buys labour; the barista sells it.");
+mc("mk",2,"Which market? An investor sells their shares in a bank.",["Stock exchange","Foreign exchange market","Labour market","Housing market"],"Shares are traded on the stock exchange.");
+bin("mk",1,"In the housing market, a landlord is the...",["Buyer","Seller"],1,"The landlord offers the use of a home for rent, so they are the seller.");
+bin("mk",2,"A company selling new shares is the ___ on the stock exchange.",["Buyer","Seller"],1,"The company sells pieces of ownership to investors.");
+bin("mk",2,"An Australian business needs US dollars to pay an American supplier. It is ___ US dollars.",["Buying","Selling"],0,"It buys US dollars and sells Australian dollars to pay for them.");
+tf("mk",1,"A market must have a building you can visit.",false,"Markets can be online, like eBay, or electronic, like the stock exchange.");
+tf("mk",1,"In a market, prices are set by buyers and sellers.",true,"Prices move when buyers or sellers change what they want to do.");
+tf("mk",2,"A share is a loan to a company that it must pay back.",false,"A share is a piece of ownership, not a loan.");
+mc("mk",1,"When something becomes scarce, its price usually...",["Rises","Falls","Stays the same"],"Scarce things are in short supply, so buyers compete and the price rises.");
+mc("mk",2,"Many businesses need workers with a skill, but few people have it. What happens to wages for that skill?",["They rise","They fall","They stay the same"],"Employers compete for the few workers by offering more pay.");
+mc("mk",3,"The Australian dollar rises in value. For an Australian family holidaying in the USA, the trip becomes...",["Cheaper","Dearer","No different"],"Each Australian dollar buys more US dollars, so things in the USA cost fewer Australian dollars.");
+mc("mk",3,"The Australian dollar rises in value. What happens to the price of Australian wheat for overseas buyers?",["It becomes dearer","It becomes cheaper","No change"],"Overseas buyers need more of their own currency to buy each Australian dollar.");
+mc("mk",2,"Lots of people move to a city, but new homes take years to build. What happens to house prices?",["They rise","They fall","They stay the same"],"Demand for homes rises faster than supply, so prices rise.");
+mc("mk",2,"What is the main role of the stock exchange in the economy?",["It moves people's savings to businesses so they can grow","It sets wages","It collects taxes","It swaps currencies"],"Companies raise money by selling shares to investors.");
+mc("mk",2,"What is the main role of the labour market in the economy?",["It moves workers to where they are needed most","It sells houses","It sets the exchange rate","It lends money to businesses"],"Industries short of workers offer higher wages, and workers move to them.");
+mc("mk",2,"What is the main role of the foreign exchange market?",["It makes trade and travel between countries possible","It sets house prices","It hires workers","It collects GST"],"Businesses and travellers need other currencies to pay for things overseas.");
+mc("mk",2,"What is the main role of the housing market?",["It shares out homes and signals builders to build more","It sets wages","It sells shares","It swaps currencies"],"High prices and rents signal that more homes are needed.");
+mc("mk",3,"Superannuation funds invest workers' savings. Where do they put a lot of that money?",["Shares on the stock exchange","Under the bed","Into GST","Into the labour market"],"That is why most working Australians own shares through their super.");
+
+/* Circular flow */
+TAPS.push(["A teenager is paid for their shift at a café.",2],["A parent buys school shoes at a department store.",4],["A bakery sells bread to a family.",3],["A worker pays income tax.",7],["The government pays a company to build a new train line.",8],["A family puts their tax refund into a savings account.",5],["A bank lends a business money to buy new trucks.",6],["A plumber provides their skills to a building company.",1]);
+mc("cf",1,"What do businesses give households in return for their resources, like labour?",["Income, mostly wages","Taxes","Savings","Shares"],"Income flows from businesses to households.");
+mc("cf",1,"What do households get in return for their spending (expenditure)?",["Goods and services","Wages","Taxes","Loans"],"Households spend money and receive goods and services from businesses.");
+mc("cf",1,"Which sector provides labour to businesses?",["Households","Government","Financial sector","Businesses"],"People in households work for businesses.");
+mc("cf",1,"Which sector provides roads, schools and hospitals?",["Government","Financial sector","Households","Businesses"],"The government uses tax money to pay for things we all use.");
+mc("cf",2,"In the economy, what is a sector?",["A group that does a similar job, like all households or all businesses","A single shop","A type of tax","A bank account"],"The four sectors are households, businesses, the financial sector and the government.");
+tf("cf",2,"Between households and businesses, money flows one way and resources, goods and services flow the other way.",true,"Households give resources and get income; businesses give goods and services and get spending.");
+mc("cf",2,"Households start spending less because they are worried about losing their jobs. What happens to business income?",["It falls","It rises","It stays the same"],"Less expenditure means businesses earn less.");
+mc("cf",3,"Businesses are earning less. What might they do next?",["Hire fewer workers, so household income falls","Pay more tax","Lend more money","Build more roads"],"One flow shrinking makes other flows shrink: the sectors are interdependent.");
+mc("cf",1,"Which is an example of government spending?",["Building a new train line","Paying GST","Putting money in a bank","Buying groceries"],"The government spends tax money on things we all use.");
+mc("cf",1,"Which is an example of household saving?",["Putting money into a bank account","Buying a new phone","Paying income tax","Working a shift"],"Saving is money kept instead of spent.");
+mc("cf",1,"Why does the government collect taxes?",["To pay for the goods and services it provides","To make businesses close","To pay banks","To set prices"],"Taxes pay for things like schools, hospitals and roads.");
+mc("cf",2,"Which flow goes from households to the financial sector?",["Savings","Investment","Taxes","Income"],"Households save money in banks and super funds.");
+mc("cf",2,"Which flow goes from the financial sector to businesses?",["Investment (loans to grow)","Savings","Government spending","Expenditure"],"Banks lend savings to businesses.");
+mc("cf",2,"Which flow goes from the government to businesses?",["Government spending","Taxes","Savings","Output"],"The government pays businesses to build things like roads and hospitals.");
+mc("cf",2,"Which flow goes from households to the government?",["Taxes","Investment","Income","Output"],"Households pay income tax and GST.");
+
+/* Demand and supply */
+mc("ds",1,"Quantity demanded is...",["How much buyers are willing and able to buy at one price","How much sellers make","The price of a product","The cost of making it"],"Each price has its own quantity demanded.");
+mc("ds",1,"Quantity supplied is...",["How much sellers are willing and able to sell at one price","How much buyers want","The profit on each item","The price"],"Each price has its own quantity supplied.");
+mc("ds",1,"How do you work out profit on each item?",["Price minus cost per item","Price plus cost per item","Cost minus price","Price times quantity"],"If something sells for $8 and costs $3 to make, the profit is $5.");
+mc("ds",1,"On a demand and supply graph, price goes...",["Up the side (vertical axis)","Along the bottom (horizontal axis)","In the middle","Nowhere"],"Quantity goes along the bottom.");
+mc("ds",1,"On a demand and supply graph, quantity goes...",["Along the bottom (horizontal axis)","Up the side (vertical axis)","In the title","Nowhere"],"Price goes up the side.");
+mc("ds",2,"A shortage usually shows up as...",["Empty shelves, queues and sold-out signs","Big clearance sales","Unsold stock","Lower prices"],"Buyers want more than sellers offer.");
+mc("ds",2,"A surplus usually shows up as...",["Unsold stock and clearance sales","Queues","Purchase limits","Sold-out signs"],"Sellers offer more than buyers want.");
+mc("ds",2,"Shops hold end-of-season clothing sales. What does that suggest?",["There was a surplus: the price was above equilibrium","There was a shortage","The clothes were at equilibrium","The government set the price"],"Cutting the price helps sell the extra stock.");
+tf("ds",1,"At equilibrium, quantity demanded equals quantity supplied.",true,"That is where the demand and supply curves cross.");
+tf("ds",1,"A higher price makes sellers want to supply less.",false,"A higher price means more profit per item, so sellers supply more.");
+tf("ds",2,"A lower price makes buyers want to buy more.",true,"That is the law of demand.");
+mc("ds",3,"Why does the price move back towards equilibrium when there is a surplus?",["Sellers cut prices to sell their extra stock","Buyers pay more","The government steps in","Sellers make more"],"The price keeps falling until demanded equals supplied.");
+
+/* Shifts */
+SHIFTS.push(
+ [1,"School holidays start. What happens in the market for theme park tickets?","DR","More people have time off, so more want tickets at every price."],
+ [2,"A new avocado farm opens nearby. What happens in the avocado market?","SR","More sellers means more supply at every price."],
+ [2,"The price of coffee beans rises. What happens in the market for café coffee?","SL","Beans are a production cost, so less is supplied at every price."],
+ [2,"A famous footballer is seen wearing a brand of boots. What happens in the market for those boots?","DR","They become more popular, so demand increases."],
+ [2,"Electricity costs rise for bakeries. What happens in the bread market?","SL","Higher production costs mean less supplied at every price."],
+ [2,"A cinema raises its ticket price from $18 to $22. What happens in the cinema ticket market?","N","The product's own price changed, so we slide along the demand curve."],
+ [3,"Streaming services become much cheaper. What happens in the market for cinema tickets?","DL","Streaming is a substitute. When it gets cheaper, fewer people want cinema tickets."],
+ [3,"Petrol becomes much more expensive. What happens in the market for big cars that use lots of petrol?","DL","Petrol and cars are used together (complements), so demand for big cars falls."],
+ [1,"A drought hits wheat farms. What happens in the wheat market?","SL","Bad weather destroys crops, so less is supplied at every price."],
+ [2,"A robot makes car parts faster and cheaper. What happens in the car market?","SR","New technology lowers costs, so more is supplied at every price."],
+ [1,"Many more tourists visit Perth. What happens in the market for hotel rooms?","DR","More visitors want rooms at every price."],
+ [3,"The government pays farmers extra to grow vegetables. What happens in the vegetable market?","SR","The payment lowers farmers' costs, so more is supplied at every price."],
+ [1,"Winter arrives. What happens in the market for hoodies?","DR","Cold weather makes buyers want more hoodies at every price."],
+ [2,"A supermarket cuts the price of its milk from $3 to $2.50. What happens in the milk market?","N","Its own price changed, so we slide along the demand curve. No curve moves."],
+ [2,"Many people lose their jobs. What happens in the market for restaurant meals?","DL","People have less money, so they buy fewer meals out at every price."]);
+mc("sh",1,"Which of these causes the DEMAND curve to shift?",["People's incomes change","The cost of ingredients changes","A new machine is invented","New shops open"],"Demand shifts when something changes for buyers.");
+mc("sh",1,"Which of these causes the SUPPLY curve to shift?",["Production costs change","People's incomes change","A product goes viral","The weather changes what people want"],"Supply shifts when something changes for sellers.");
+mc("sh",2,"A change in the product's own price causes...",["A movement along the curve","A shift of the demand curve","A shift of the supply curve","Both curves to shift"],"Only something other than the product's own price shifts a curve.");
+mc("sh",2,"Supply shifts left. What happens to the equilibrium price?",["It rises","It falls","It stays the same"],"Less on offer at every price, so the price rises.");
+mc("sh",2,"Demand shifts right. What happens to the equilibrium quantity?",["It rises","It falls","It stays the same"],"More is wanted at every price, so more is sold.");
+mc("sh",3,"Supply shifts right. What happens to the equilibrium price and quantity?",["Price falls, quantity rises","Both rise","Both fall","Price rises, quantity falls"],"More on offer: cheaper, and more sold.");
+tf("sh",2,"If demand increases, the demand curve moves up.",false,"Curves shift right for an increase and left for a decrease, never up or down.");
+
+/* Government */
+TS.push(["Building a new school","Spending"],["Council rates","Tax"],["Payroll tax paid by big employers","Tax"],["Paying police officers","Spending"],["Stamp duty when buying a house","Tax"],["Funding public hospitals","Spending"]);
+AREAS.push(["Paying for paramedics and ambulances","Health"],["Building a new train station","Transport"],["Payments for families with young children","Welfare"],["Training new teachers","Education"]);
+mc("gv",2,"In WA, which level of government runs the police?",["State (WA Government)","Federal (Australian Government)","Local (your council)"],"The WA Government runs the WA Police Force.");
+mc("gv",2,"Which level of government builds local parks and libraries?",["Local (your council)","State (WA Government)","Federal (Australian Government)"],"Councils use rates to pay for local services.");
+mc("gv",2,"Which level of government runs the Australian Defence Force?",["Federal (Australian Government)","State (WA Government)","Local (your council)"],"Defence protects the whole country.");
+mc("gv",2,"Which level of government collects GST?",["Federal (Australian Government)","State (WA Government)","Local (your council)"],"The federal government collects GST and shares it with the states.");
+mc("gv",1,"What is tax revenue?",["All the money the government collects from taxes","Money you save in a bank","A business's profit","The price of a product"],"Tax revenue pays for government spending.");
+mc("gv",1,"GST is a tax on...",["Goods and services people buy","Wages people earn","Company profits","Houses only"],"It is added to the price of most things we buy.");
+mc("gv",2,"Excise is an extra tax on things like...",["Fuel, alcohol and tobacco","Fresh fruit","School fees","Doctor visits"],"It raises money and makes harmful products dearer.");
+mc("gv",2,"Why can't the government provide everything for free?",["It needs tax money to pay for things, and resources are limited","It is not allowed to","Businesses would be angry","Nobody wants free things"],"Every service has to be paid for, mostly with tax revenue.");
+mc("gv",1,"Which of these is provided by the government because a business would struggle to charge each user?",["Street lights","Mobile phones","Bubble tea","Movie tickets"],"It is hard to make each person who walks under a street light pay.");
+tf("gv",1,"Fresh fruit and vegetables have no GST.",true,"Basic fresh food is GST-free in Australia.");
+mc("gv",2,"Australia's income tax rates go up in steps as income rises. What does that mean?",["People who earn more pay a higher rate on their extra dollars","Everyone pays the same amount","Only businesses pay tax","Low earners pay the highest rate"],"Each step is called a tax bracket.");
+
+/* ---------- sets for sorting rounds ---------- */
+var SORTSETS=[
+ {t:"gv",d:1,q:"Sort each one: tax (money coming in) or government spending (money going out)?",cats:["Tax","Spending"],items:TS},
+ {t:"mk",d:1,q:"Sort each one: buyer or seller?",cats:["Buyer","Seller"],items:[["A worker, in the labour market","Seller"],["An employer hiring staff","Buyer"],["A family renting a house","Buyer"],["A landlord","Seller"],["An investor buying shares","Buyer"],["A company selling new shares","Seller"],["A tourist getting Australian dollars","Buyer"],["Someone selling their house","Seller"]]},
+ {t:"sh",d:2,q:"Sort each change: does it shift demand or supply?",cats:["Demand","Supply"],items:[["People earn more money","Demand"],["Ingredients cost more","Supply"],["A product goes viral","Demand"],["A new machine speeds up production","Supply"],["More people move to the area","Demand"],["Bad weather destroys crops","Supply"],["A substitute gets cheaper","Demand"],["New shops open","Supply"],["The government adds a tax on the product","Supply"],["Hot weather makes people want it more","Demand"]]},
+ {t:"cf",d:1,q:"Sort each one: is it money, or real things (resources, goods and services)?",cats:["Money","Real things"],items:[["Wages","Money"],["Labour","Real things"],["A haircut","Real things"],["Spending at the shops","Money"],["Taxes","Money"],["A new fridge","Real things"],["Savings in a bank","Money"],["Land rented to a business","Real things"]]},
+ {t:"sh",d:2,q:"Sort each change: does a curve shift, or do we slide along the curve?",cats:["Shift","Slide along"],items:[["A café raises the price of its coffee","Slide along"],["A heatwave hits","Shift"],["A shop cuts the price of its sneakers","Slide along"],["Wages for staff rise","Shift"],["A product goes viral","Shift"],["The cinema puts its ticket price up","Slide along"],["New shops open","Shift"],["A bakery cuts the price of its bread","Slide along"]]},
+ {t:"ds",d:2,q:"Sort each sign: shortage or surplus?",cats:["Shortage","Surplus"],items:[["Empty shelves","Shortage"],["Big clearance sales","Surplus"],["Long queues and sold-out signs","Shortage"],["Unsold stock piling up","Surplus"],["Limits of two per customer","Shortage"],["Tickets resold for double the price","Shortage"],["The price is above equilibrium","Surplus"],["The price is below equilibrium","Shortage"]]},
+ {t:"cf",d:2,q:"Sort each one into its sector.",cats:["Households","Businesses","Financial sector","Government"],items:[["Your family","Households"],["A supermarket chain","Businesses"],["A bank","Financial sector"],["The Australian Taxation Office","Government"],["A super fund","Financial sector"],["A local café","Businesses"],["A local council","Government"],["A retired couple","Households"]]},
+ {t:"gv",d:2,q:"Sort each one into its level of government.",cats:["Federal","State","Local"],items:[["Medicare","Federal"],["Public hospitals in WA","State"],["Emptying bins","Local"],["Defence","Federal"],["Public schools in WA","State"],["Local parks and libraries","Local"],["The Age Pension","Federal"],["Transperth","State"]]}];
+
+/* ---------- sets for matching rounds ---------- */
+var MATCHSETS=[
+ {t:"mk",d:1,q:"Match each market to what its price is called.",pairs:[["Labour market","Wage or salary"],["Housing market","Rent or house price"],["Stock exchange","Share price"],["Foreign exchange market","Exchange rate"]]},
+ {t:"mk",d:2,q:"Match each market to who buys in it.",pairs:[["Labour market","Employers"],["Housing market","Home buyers and renters"],["Stock exchange","Investors"],["Foreign exchange market","Anyone who needs another currency"]]},
+ {t:"mk",d:2,q:"Match each market to what is traded in it.",pairs:[["Labour market","Workers' time and skills"],["Housing market","Homes"],["Stock exchange","Shares in companies"],["Foreign exchange market","Currencies"]]},
+ {t:"cf",d:1,q:"Match each sector to what it does.",pairs:[["Households","Provide labour and spend their income"],["Businesses","Make and sell goods and services"],["Financial sector","Keep savings and lend money"],["Government","Collect taxes and provide services"]]},
+ {t:"cf",d:2,q:"Match each flow to where it goes.",pool:[["Savings","Households to the financial sector"],["Investment","Financial sector to businesses"],["Taxes","Households to the government"],["Government spending","Government to businesses"],["Income","Businesses to households"],["Expenditure","Households to businesses"]]},
+ {t:"gv",d:2,q:"Match each tax to who pays it.",pairs:[["Income tax","Workers, on what they earn"],["Company tax","Businesses, on their profit"],["GST","Shoppers, on what they buy"],["Excise","Buyers of fuel, alcohol and tobacco"]]},
+ {t:"gv",d:1,q:"Match each level of government to something it runs.",pairs:[["Federal","Medicare and defence"],["State","Public hospitals and schools"],["Local","Bins, parks and libraries"]]},
+ {t:"sh",d:2,q:"Match each change to what happens at the new equilibrium.",pairs:[["Demand increases","Price up, quantity up"],["Demand decreases","Price down, quantity down"],["Supply increases","Price down, quantity up"],["Supply decreases","Price up, quantity down"]]},
+ {t:"ds",d:1,q:"Match each term to its meaning.",pairs:[["Equilibrium","Demanded equals supplied"],["Surplus","Supplied is more than demanded"],["Shortage","Demanded is more than supplied"],["Demand","What buyers are willing and able to buy"]]}];
+
+/* ===== Core: helpers, question generators and the full bank. No page code here, so the bank can be listed for teachers. ===== */
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function rnd(n){return Math.floor(Math.random()*n)}
+function pick(a){return a[rnd(a.length)]}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=rnd(i+1),t=a[i];a[i]=a[j];a[j]=t}return a}
+function money(v){return"$"+Math.round(v).toLocaleString("en-AU")}
+function money2(v){return"$"+(Math.round(v*100)/100).toFixed(2)}
+/* ---------- generators ---------- */
+var BR=[[0,18200,0,0],[18200,45000,0.15,0],[45000,135000,0.30,4020],[135000,190000,0.37,31020],[190000,Infinity,0.45,51370]];
+var BRT=["$0 to $18,200","$18,201 to $45,000","$45,001 to $135,000","$135,001 to $190,000","$190,001 and over"];
+var BRR=["Nil","15c per $1 over $18,200","$4,020 + 30c per $1 over $45,000","$31,020 + 37c per $1 over $135,000","$51,370 + 45c per $1 over $190,000"];
+var NAMES=["Ava","Noah","Zara","Leo","Isla","Kai","Ruby","Eli","Chloe","Liam","Priya","Tom","Grace","Sami"];
+function distinct(correct,list,fill){var out=[],seen={};seen[correct]=1;list.forEach(function(v){if(out.length<3&&v!=null&&!seen[v]){seen[v]=1;out.push(v)}});var k=0;while(out.length<3&&k<20){var v=fill(k++);if(!seen[v]){seen[v]=1;out.push(v)}}return out}
+function genTax(){ /* full calculation: Practice mode only */var inc=pick([16000,25000,30000,38000,42000,52000,60000,70000,85000,95000,110000,130000,150000,175000,200000,240000]),b=0;
+  for(var i=BR.length-1;i>=0;i--){if(inc>BR[i][0]){b=i;break}}
+  var r=BR[b],over=inc-r[0],part=Math.round(over*r[2]),tax=Math.round(r[3]+over*r[2]);
+  var wrong=[];if(r[3])wrong.push(part);if(r[2])wrong.push(Math.round(inc*r[2]));if(b>=2)wrong.push(Math.round(over*BR[b-1][2]+r[3]));if(b===0)wrong.push(Math.round(inc*0.15),Math.round((18200-inc)*0.15));if(b===1)wrong.push(Math.round((inc-18200)*0.30),Math.round(inc*0.15)+4020);
+  var d=distinct(tax,wrong,function(k){return tax+[1000,-500,2000,4020,-1000][k%5]*(1+Math.floor(k/5))}).filter(function(v){return v>=0});
+  while(d.length<3)d.push(tax+5000*(d.length+1));
+  var nm=pick(NAMES);
+  var why=b===0?nm+" earns less than $18,200, so pays no income tax.":"Bracket: "+BRT[b]+". Over the line: "+money(inc)+" − "+money(r[0])+" = "+money(over)+". Times "+r[2].toFixed(2)+" = "+money(part)+"."+(r[3]?" Plus the base amount "+money(r[3])+" = "+money(tax)+".":" No base amount, so the tax is "+money(tax)+".");
+  return{k:"mc",t:"gv",d:b<=1?2:3,q:"Use the tax table. "+nm+" earns "+money(inc)+" a year. How much income tax does "+nm+" pay?",o:[money(tax)].concat(d.slice(0,3).map(money)),a:0,why:why,tax:b,gen:"tax"}}
+function genGST(){var items=[["A t-shirt",20],["A phone case",15],["A pizza",12],["A drink",4],["A movie ticket",18],["A pair of headphones",45],["A book",30],["A haircut",25]],it=pick(items),p=it[1];
+  if(Math.random()<0.5)return{k:"mc",t:"gv",d:2,q:it[0]+" costs "+money2(p)+" before GST. How much GST is added?",o:[money2(p*0.1),money2(p*0.01),money2(p*1.1),money2(p*0.2)],a:0,why:"GST is 10%. 10% of "+money2(p)+" is "+money2(p)+" ÷ 10 = "+money2(p*0.1)+".",gen:"gst"};
+  return{k:"mc",t:"gv",d:2,q:it[0]+" costs "+money2(p)+" before GST. What is the final price with GST?",o:[money2(p*1.1),money2(p*0.1),money2(p+1),money2(p*1.01)],a:0,why:"GST is 10%: "+money2(p*0.1)+". Final price = "+money2(p)+" + "+money2(p*0.1)+" = "+money2(p*1.1)+".",gen:"gst"}}
+function genProfit(){var items=["a cup of bubble tea","a tub of slime","a cupcake","a phone case","a smoothie"],it=pick(items),c=2+rnd(4),p=c+1+rnd(5),pr=p-c;
+  var d=distinct(pr,[p+c,p,c],function(k){return pr+k+1});
+  return{k:"mc",t:"ds",d:2,q:"It costs "+money(c)+" to make "+it+". It sells for "+money(p)+". What is the profit on each one?",o:[money(pr)].concat(d.map(money)),a:0,why:"Profit per item = price − cost per item = "+money(p)+" − "+money(c)+" = "+money(pr)+".",gen:"profit"}}
+var PRODS=["phone cases","cinema tickets","hoodies","pizzas","basketballs","bottles of sunscreen","skateboards","concert T-shirts"];
+function genGraph(){var g={p0:3+rnd(5),q0:pick([250,300,350]),a:pick([50,100]),b:pick([50,100]),prod:pick(PRODS)},r=rnd(3);
+  var base="The graph shows the market for "+g.prod+". ";
+  if(r===0){var ps=distinct(g.p0,shuffle([g.p0-2,g.p0-1,g.p0+1,g.p0+2]).filter(function(v){return v>=1&&v<=9}),function(k){return g.p0+3+k});
+    return{k:"graph",t:"ds",d:2,g:g,mode:"eq",q:base+"Find where demand (D) and supply (S) cross. What is the equilibrium price?",o:[money(g.p0)].concat(ps.map(money)),a:0,why:"D and S cross at "+money(g.p0)+" and "+g.q0+" "+g.prod+". That point is the equilibrium.",gen:"graph"}}
+  if(r===1){var qs=distinct(g.q0,shuffle([g.q0-100,g.q0+100,g.q0-50,g.q0+50,g.q0+150]).filter(function(v){return v>=50&&v<=550}),function(k){return g.q0+200+50*k});
+    return{k:"graph",t:"ds",d:2,g:g,mode:"eq",q:base+"Find where demand (D) and supply (S) cross. What is the equilibrium quantity?",o:[String(g.q0)].concat(qs.map(String)),a:0,why:"D and S cross at "+money(g.p0)+" and "+g.q0+" "+g.prod+". Read the quantity straight down from that point.",gen:"graph"}}
+  var k=1+rnd(2),sg=Math.random()<0.5?1:-1,P=g.p0+sg*k;if(P<1||P>9){sg=-sg;P=g.p0+sg*k}
+  var Qd=g.q0-g.a*(P-g.p0),Qs=g.q0+g.b*(P-g.p0),gap=Math.abs(Qd-Qs),sur=Qs>Qd,g2=gap+(gap>100?-50:50);g.P=P;g.Qd=Qd;g.Qs=Qs;
+  return{k:"graph",t:"ds",d:3,g:g,mode:"gap",q:base+"The price is set at "+money(P)+" (the dashed line). Read how many buyers want and how many sellers supply. What is there?",
+    o:[(sur?"A surplus of ":"A shortage of ")+gap,(sur?"A shortage of ":"A surplus of ")+gap,(sur?"A surplus of ":"A shortage of ")+g2,"No surplus or shortage: equilibrium"],a:0,
+    why:"At "+money(P)+", buyers want "+Qd+" and sellers supply "+Qs+". "+(sur?"Supplied is bigger, so there is a surplus of "+Qs+" − "+Qd+" = "+gap+". The price is above equilibrium.":"Demanded is bigger, so there is a shortage of "+Qd+" − "+Qs+" = "+gap+". The price is below equilibrium."),gen:"graph"}}
+function genOutcome(){var s=pick(SHIFTS.filter(function(x){return x[2]!=="N"})),askP=Math.random()<0.5,out=SHIFT_OUT[s[2]];
+  var mm=s[1].match(/^(.*?) What happens in the (.*)\?$/),base=mm?mm[1]+" In the "+mm[2]+",":s[1];
+  var ans=askP?out[0]:out[1],o=["It rises","It falls","It stays the same"],cor=ans==="rises"?0:1;
+  var oo=[o[cor]].concat(o.filter(function(x,i){return i!==cor}));
+  return{k:"mc",t:"sh",d:3,q:base+" what happens to the equilibrium "+(askP?"price":"quantity")+"?",o:oo,a:0,why:SHIFT_NAME[s[2]]+". So the equilibrium price "+out[0]+" and the quantity "+out[1]+".",gen:"out"}}
+
+/* ---------- bank items built from lists ---------- */
+TS.forEach(function(x){bin("gv",1,"Is this tax (money coming in to the government) or spending (money going out)? "+x[0],["Tax","Spending"],x[1]==="Tax"?0:1,x[1]==="Tax"?"This is money the government collects.":"This is money the government spends on people and services.")});
+AREAS.forEach(function(a){mc("gv",2,"Which spending area is this? "+a[0],[a[1]].concat(AN.filter(function(x){return x!==a[1]})),a[1]+" spending.")});
+/* ---------- extra bank items built from data ---------- */
+SHIFTS.forEach(function(s){BANK.push({k:"shift",t:"sh",d:s[0],q:s[1],a:s[2],why:s[3]})});
+for(var n=1;n<=8;n++){
+  BANK.push({k:"flowwhat",t:"cf",d:n<=4?1:2,arrow:n});
+  BANK.push({k:"tap",t:"cf",d:2,q:"Tap the arrow that shows "+ARW[n].name.toLowerCase()+".",arrow:n,why:ARW[n].why});
+  if(n<=4)BANK.push({k:"bin",t:"cf",d:1,q:"In the circular flow, is "+ARW[n].name.toLowerCase()+" a flow of money, or a flow of real things (resources, goods and services)?",o:["Money","Real things"],a:ARW[n].money?0:1,why:ARW[n].why});
+}
+TAPS.forEach(function(t){BANK.push({k:"tap",t:"cf",d:2,q:t[0]+" Tap the arrow.",arrow:t[1],why:"Arrow "+t[1]+": "+ARW[t[1]].name+". "+ARW[t[1]].why})});
+
+BANK.forEach(function(q,i){q.id=i});
+
+/* ---------- quick tax questions for Rush: find the bracket ---------- */
+var INCOMES=[9000,12500,16000,17500,21000,26000,31000,38500,42000,47000,58000,66000,79000,92000,104000,118000,129000,138000,149000,163000,178000,186000,195000,210000,236000,265000];
+function bracketOf(inc){for(var i=BR.length-1;i>=0;i--){if(inc>BR[i][0])return i}return 0}
+function genTaxRow(){var inc=pick(INCOMES),b=bracketOf(inc);
+  return{k:"taxrow",t:"gv",d:b===0||b===4?1:2,q:"Someone earns "+money(inc)+" a year. Tap the row of the tax table they are in.",a:b,inc:inc,why:money(inc)+" is in the "+BRT[b]+" row.",gen:"taxrow"}}
+var RATES=["Nothing (0 cents)","15 cents","30 cents","37 cents","45 cents"];
+function genTaxRate(){var inc=pick(INCOMES),b=bracketOf(inc),others=shuffle([0,1,2,3,4].filter(function(i){return i!==b})).slice(0,3);
+  return{k:"mc",t:"gv",d:2,showTax:true,q:"Use the tax table. Someone earns "+money(inc)+" a year and gets a pay rise. How much tax do they pay on each extra dollar?",o:[RATES[b]].concat(others.map(function(i){return RATES[i]})),a:0,why:money(inc)+" is in the "+BRT[b]+" row, so each extra dollar is taxed at "+RATES[b].replace("Nothing (0 cents)","0 cents")+".",gen:"taxrate"}}
+genTax.pracOnly=true;
+
+/* ---------- table questions (any business) ---------- */
+function genTable(){var prods=["muffins at a school canteen","tubs of slime","punnets of strawberries","Year 8 hoodies","cinema tickets","phone cases"],pr=pick(prods),p0=3+rnd(4),q0=pick([120,150,180,240]),dd=pick([20,30,40]),ds=pick([20,30,40]);
+  var rows=[];for(var p=p0-2;p<=p0+2;p++)rows.push([p,q0-dd*(p-p0),q0+ds*(p-p0)]);
+  var r=rnd(3);
+  if(r===0){var opts=shuffle(rows.filter(function(x){return x[0]!==p0})).slice(0,3).map(function(x){return money(x[0])});
+    return{k:"table",t:"ds",d:2,q:"The table shows the market for "+pr+". What is the equilibrium price?",rows:rows,cols:["Price","Demanded","Supplied"],o:[money(p0)].concat(opts),a:0,why:"Find the row where demanded equals supplied: at "+money(p0)+", both are "+q0+".",gen:"table"}}
+  if(r===1){var o2=distinct(q0,shuffle([rows[0][1],rows[1][2],rows[3][1],rows[4][2],rows[1][1]]),function(k){return q0+10*(k+1)});
+    return{k:"table",t:"ds",d:2,q:"The table shows the market for "+pr+". What is the equilibrium quantity?",rows:rows,cols:["Price","Demanded","Supplied"],o:[String(q0)].concat(o2.map(String)),a:0,why:"At "+money(p0)+", demanded and supplied are both "+q0+".",gen:"table"}}
+  var row=pick([rows[0],rows[1],rows[3],rows[4]]),gap=Math.abs(row[1]-row[2]),sur=row[2]>row[1],alt=gap+(gap>30?-10:10);
+  return{k:"table",t:"ds",d:3,hl:row[0],q:"The table shows the market for "+pr+". At "+money(row[0])+", what is there?",rows:rows,cols:["Price","Demanded","Supplied"],o:[(sur?"A surplus of ":"A shortage of ")+gap,(sur?"A shortage of ":"A surplus of ")+gap,(sur?"A surplus of ":"A shortage of ")+alt,"No surplus or shortage: equilibrium"],a:0,
+    why:"At "+money(row[0])+", demanded is "+row[1]+" and supplied is "+row[2]+". "+(sur?"Supplied is bigger: a surplus of "+gap+".":"Demanded is bigger: a shortage of "+gap+"."),gen:"table"}}
+
+/* ---------- interactive: tap the point on the graph ---------- */
+function newG(){return{p0:3+rnd(5),q0:pick([250,300,350]),a:pick([50,100]),b:pick([50,100]),prod:pick(PRODS)}}
+function genGTap(){var g=newG(),r=rnd(4),base="The graph shows the market for "+g.prod+". ";
+  if(r===0)return{k:"gtap",t:"ds",d:2,g:g,q:base+"Tap the equilibrium point, where demand and supply cross.",target:[g.q0,g.p0],why:"Demand and supply cross at "+money(g.p0)+" and "+g.q0+".",gen:"gtap"};
+  var P=g.p0+pick([-2,-1,1,2]);if(P<1||P>9)P=g.p0+1;
+  if(r===1){var q=g.q0-g.a*(P-g.p0);return{k:"gtap",t:"ds",d:2,g:g,q:base+"Find the price "+money(P)+" on the side. Tap the point on the DEMAND curve at that price.",target:[q,P],why:"At "+money(P)+", the demand curve is at "+q+": buyers want "+q+".",gen:"gtap"}}
+  if(r===2){var q2=g.q0+g.b*(P-g.p0);return{k:"gtap",t:"ds",d:2,g:g,q:base+"Find the price "+money(P)+" on the side. Tap the point on the SUPPLY curve at that price.",target:[q2,P],why:"At "+money(P)+", the supply curve is at "+q2+": sellers supply "+q2+".",gen:"gtap"}}
+  var q3=g.q0-g.a*(P-g.p0);return{k:"gtap",t:"ds",d:3,g:g,q:base+"Buyers want "+q3+". Find "+q3+" along the bottom, then tap that point on the DEMAND curve.",target:[q3,P],why:"Buyers want "+q3+" when the price is "+money(P)+".",gen:"gtap"}}
+
+/* ---------- interactive: set the price ---------- */
+function genPrice(){var g=newG(),r=rnd(3);
+  if(r===0)return{k:"price",t:"ds",d:2,g:g,task:"eq",q:"You run a business selling "+g.prod+". Slide the price until nothing is left over and no buyer misses out. Then lock it in.",target:g.p0,why:"At "+money(g.p0)+", buyers want "+g.q0+" and you supply "+g.q0+": the equilibrium.",gen:"price"};
+  var k=1+rnd(2),below=r===1,P=below?g.p0-k:g.p0+k;if(P<1||P>9){below=!below;P=below?g.p0-k:g.p0+k}
+  var gap=(g.a+g.b)*k;
+  return{k:"price",t:"ds",d:3,g:g,task:below?"short":"sur",gap:gap,q:"You run a business selling "+g.prod+". Slide the price to make a "+(below?"SHORTAGE":"SURPLUS")+" of exactly "+gap+". Then lock it in.",target:P,why:"At "+money(P)+", buyers want "+(g.q0-g.a*(P-g.p0))+" and you supply "+(g.q0+g.b*(P-g.p0))+": a "+(below?"shortage":"surplus")+" of "+gap+". "+(below?"Below":"Above")+" equilibrium.",gen:"price"}}
+
+/* ---------- interactive: shift the curve yourself ---------- */
+function genDrag(){var s=pick(SHIFTS.filter(function(x){return x[2]!=="N"}));return{k:"gdrag",t:"sh",d:s[0]>=2?2:1,q:s[1],a:s[2],why:s[3],gen:"gdrag"}}
+
+/* ---------- sorting and matching rounds ---------- */
+function genSort(t){var sets=SORTSETS.filter(function(s){return s.t===t}),S=pick(sets),its=shuffle(S.items),pickd=[],used={};
+  S.cats.forEach(function(c){var f=its.filter(function(x){return x[1]===c&&!used[x[0]]})[0];if(f&&pickd.length<4){pickd.push(f);used[f[0]]=1}});
+  its.forEach(function(x){if(pickd.length<4&&!used[x[0]]){pickd.push(x);used[x[0]]=1}});
+  return{k:"sort",t:t,d:S.d,q:S.q,cats:S.cats,items:shuffle(pickd),why:pickd.map(function(x){return x[0]+": "+x[1]}).join(". ")+".",gen:"sort"}}
+function genMatch(t){var sets=MATCHSETS.filter(function(s){return s.t===t}),S=pick(sets),pairs=S.pairs||shuffle(S.pool).slice(0,4);
+  return{k:"match",t:t,d:S.d,q:S.q,pairs:pairs,why:pairs.map(function(p){return p[0]+": "+p[1]}).join(". ")+".",gen:"match"}}
+function sortOf(t){var f=function(){return genSort(t)};f.label="sort";return f}
+function matchOf(t){var f=function(){return genMatch(t)};f.label="match";return f}
+
+var GENS={
+  mk:[sortOf("mk"),matchOf("mk"),matchOf("mk")],
+  cf:[sortOf("cf"),sortOf("cf"),matchOf("cf")],
+  ds:[genProfit,genGraph,genGraph,genTable,genGTap,genGTap,genPrice,sortOf("ds"),matchOf("ds")],
+  sh:[genOutcome,genDrag,genDrag,sortOf("sh"),matchOf("sh")],
+  gv:[genTax,genTaxRow,genTaxRow,genTaxRate,genGST,sortOf("gv"),matchOf("gv")]};
+
+/* ---------- interactive: place labels on the circular flow ---------- */
+var CFL={1:"Resources",2:"Income",3:"Goods and services",4:"Expenditure",5:"Savings",6:"Investment",7:"Taxes",8:"Government spending"};
+function genCfDrop(){var all=shuffle([1,2,3,4,5,6,7,8]),bl=all.slice(0,4).sort();
+  return{k:"cfdrop",t:"cf",d:bl.some(function(n){return n>4})?2:1,blanks:bl,q:"Drag each label onto the right arrow of the circular flow.",why:bl.map(function(n){return CFL[n]+": "+ARW[n].from.toLowerCase()+" to "+ARW[n].to.toLowerCase()}).join(". ")+".",gen:"cfdrop"}}
+
+/* ---------- interactive: slide the quantity ---------- */
+function genQSlide(){var g=newG(),r=rnd(3),P=g.p0+pick([-2,-1,1,2]);if(P<1||P>9)P=g.p0+1;var base="The graph shows the market for "+g.prod+". ";
+  if(r===0){g.P=P;var qd=g.q0-g.a*(P-g.p0);return{k:"qslide",t:"ds",d:2,g:g,q:base+"The price is "+money(P)+" (dashed line). Slide the quantity to how many buyers want at that price.",target:qd,why:"Follow the dashed line across to the demand curve, then straight down: buyers want "+qd+".",gen:"qslide"}}
+  if(r===1){g.P=P;var qs=g.q0+g.b*(P-g.p0);return{k:"qslide",t:"ds",d:2,g:g,q:base+"The price is "+money(P)+" (dashed line). Slide the quantity to how many sellers supply at that price.",target:qs,why:"Follow the dashed line across to the supply curve, then straight down: sellers supply "+qs+".",gen:"qslide"}}
+  return{k:"qslide",t:"ds",d:2,g:g,q:base+"Slide the quantity to the equilibrium quantity, where demand and supply cross.",target:g.q0,why:"Demand and supply cross at "+money(g.p0)+" and "+g.q0+".",gen:"qslide"}}
+
+/* ---------- typed number answers ---------- */
+function genNum(){var r=rnd(6);
+  if(r===0){var g=newG();return{k:"num",t:"ds",d:2,fig:"graph",g:g,unit:"$",q:"The graph shows the market for "+g.prod+". Type the equilibrium price.",ans:g.p0,why:"Demand and supply cross at "+money(g.p0)+".",gen:"num"}}
+  if(r===1){var g1=newG();return{k:"num",t:"ds",d:2,fig:"graph",g:g1,unit:"",q:"The graph shows the market for "+g1.prod+". Type the equilibrium quantity.",ans:g1.q0,why:"Demand and supply cross at a quantity of "+g1.q0+".",gen:"num"}}
+  if(r===2){var g2=newG(),k=1+rnd(2),below=Math.random()<0.5,P=below?g2.p0-k:g2.p0+k;if(P<1||P>9){below=!below;P=below?g2.p0-k:g2.p0+k}g2.P=P;var qd=g2.q0-g2.a*(P-g2.p0),qs=g2.q0+g2.b*(P-g2.p0),gap=Math.abs(qd-qs);
+    return{k:"num",t:"ds",d:3,fig:"graph",g:g2,unit:"",q:"The graph shows the market for "+g2.prod+". The price is "+money(P)+" (dashed line). How big is the "+(below?"shortage":"surplus")+"? Type the number.",ans:gap,why:"At "+money(P)+", buyers want "+qd+" and sellers supply "+qs+". The gap is "+gap+".",gen:"num"}}
+  if(r===3){var c=2+rnd(5),p=c+1+rnd(6),it=pick(["a hoodie","a cupcake","a phone case","a smoothie","a pizza slice"]);return{k:"num",t:"ds",d:2,unit:"$",q:"It costs "+money(c)+" to make "+it+". It sells for "+money(p)+". Type the profit on each one.",ans:p-c,why:"Profit = price − cost = "+money(p)+" − "+money(c)+" = "+money(p-c)+".",gen:"num"}}
+  if(r===4){var pr=pick([10,20,30,40,50,60,80,120,150,200]),itm=pick(["A pair of shoes","A school bag","A video game","A jacket","A bike helmet"]);return{k:"num",t:"gv",d:2,unit:"$",q:itm+" costs "+money(pr)+" before GST. GST is 10%. Type how much GST is added.",ans:pr/10,why:"10% of "+money(pr)+" is "+money(pr)+" ÷ 10 = "+money2(pr/10)+".",gen:"num"}}
+  var t=genTable();
+  var rows=t.rows,eq=rows[2];return{k:"num",t:"ds",d:2,fig:"table",rows:rows,cols:t.cols,unit:"",q:t.q.replace(/What is .*$/,"").replace(/At \$\d+, what is there\?$/,"")+"Type the equilibrium quantity.",ans:eq[1],why:"At "+money(eq[0])+", demanded and supplied are both "+eq[1]+".",gen:"num"}}
+GENS.cf.push(genCfDrop,genCfDrop);
+GENS.ds.push(genQSlide,genQSlide,genNum,genNum);
+GENS.gv.push(function(){var q=genNum();while(q.t!=="gv")q=genNum();return q});
+
+(function(){
+"use strict";
+/* ---------- storage ---------- */
+var KEY="y8-market-rush-v1",SV={name:"",sound:false,scores:[],best:{}};
+try{var raw=JSON.parse(localStorage.getItem(KEY)||"null");if(raw&&typeof raw==="object"){SV.tag=raw.tag||"";SV.tagUsed=!!raw.tagUsed;SV.tagReg=!!raw.tagReg;SV.tagOwn=!!raw.tagOwn;SV.sound=!!raw.sound;SV.scores=Array.isArray(raw.scores)?raw.scores:[];SV.best=raw.best||{}}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(SV))}catch(e){}}
+function $(s){return document.querySelector(s)}
+var reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+var GX=function(q){return 56+q*0.465},GY=function(p){return 248-p*21.6};
+function graphSVG(g){var h='<svg viewBox="0 0 350 290" role="img" aria-label="Demand and supply graph with a numbered grid"><defs><clipPath id="gclp"><rect x="56" y="32" width="279" height="216"/></clipPath></defs>';
+  for(var q=0;q<=600;q+=50){var x=GX(q).toFixed(1);h+='<line x1="'+x+'" y1="32" x2="'+x+'" y2="248" style="stroke:var(--line)" stroke-width="'+(q%100?0.6:1)+'"/>';if(q%100===0)h+='<text x="'+x+'" y="265" text-anchor="middle" font-size="12.5" font-weight="600" style="fill:var(--soft)">'+q+'</text>'}
+  for(var p=0;p<=10;p++){var y=GY(p).toFixed(1);h+='<line x1="56" y1="'+y+'" x2="335" y2="'+y+'" style="stroke:var(--line)" stroke-width="0.8"/><text x="50" y="'+(GY(p)+4.5).toFixed(1)+'" text-anchor="end" font-size="12.5" font-weight="600" style="fill:var(--soft)">$'+p+'</text>'}
+  h+='<line x1="56" y1="248" x2="335" y2="248" style="stroke:var(--ink)" stroke-width="1.6"/><line x1="56" y1="248" x2="56" y2="28" style="stroke:var(--ink)" stroke-width="1.6"/>';
+  h+='<text x="196" y="285" text-anchor="middle" font-size="13.5" font-weight="700" style="fill:var(--soft)">Quantity</text><text x="13" y="140" text-anchor="middle" font-size="13.5" font-weight="700" transform="rotate(-90 13 140)" style="fill:var(--soft)">Price</text>';
+  var dq=function(p){return g.q0-g.a*(p-g.p0)},sq=function(p){return g.q0+g.b*(p-g.p0)};
+  h+='<g clip-path="url(#gclp)"><line x1="'+GX(dq(-2))+'" y1="'+GY(-2)+'" x2="'+GX(dq(12))+'" y2="'+GY(12)+'" stroke-width="3.5" style="stroke:var(--dem)"/><line x1="'+GX(sq(-2))+'" y1="'+GY(-2)+'" x2="'+GX(sq(12))+'" y2="'+GY(12)+'" stroke-width="3.5" style="stroke:var(--sup)"/>';
+  if(g.P!=null)h+='<line x1="56" y1="'+GY(g.P)+'" x2="335" y2="'+GY(g.P)+'" stroke-width="2" stroke-dasharray="6 4" style="stroke:var(--ink)"/>';
+  h+='</g>';
+  var lab=function(fq,col,t){var p=null;for(var pp=9.6;pp>=0.4;pp-=0.2){var qq=fq(pp);if(qq>=20&&qq<=580){p=pp;break}}if(p==null)return"";return'<text x="'+(GX(fq(p))+6).toFixed(1)+'" y="'+(GY(p)+(t==="D"?-6:14)).toFixed(1)+'" font-size="15" font-weight="800" style="fill:'+col+'">'+t+'</text>'};
+  h+=lab(dq,"var(--dem)","D")+lab(sq,"var(--sup)","S");
+  return h+'<g class="reveal" style="opacity:0;transition:opacity .4s"></g></svg>'}
+function revealGraph(svg,q){var g=q.g,r=svg.querySelector(".reveal"),h="";
+  if(q.mode==="eq"){var x=GX(g.q0),y=GY(g.p0);h='<line x1="56" y1="'+y+'" x2="'+x+'" y2="'+y+'" stroke-dasharray="4 3" stroke-width="2" style="stroke:var(--hl)"/><line x1="'+x+'" y1="'+y+'" x2="'+x+'" y2="248" stroke-dasharray="4 3" stroke-width="2" style="stroke:var(--hl)"/><circle cx="'+x+'" cy="'+y+'" r="6.5" style="fill:var(--hl)"/><text x="'+(x+9)+'" y="'+(y-8)+'" font-size="14" font-weight="800" style="fill:var(--hl)">E</text>'}
+  else{if(g.Qd==null){g.Qd=g.q0-g.a*(g.P-g.p0);g.Qs=g.q0+g.b*(g.P-g.p0)}var y2=GY(g.P),xd=GX(g.Qd),xs=GX(g.Qs);h='<line x1="'+xd+'" y1="'+y2+'" x2="'+xd+'" y2="248" stroke-dasharray="4 3" stroke-width="2" style="stroke:var(--dem)"/><line x1="'+xs+'" y1="'+y2+'" x2="'+xs+'" y2="248" stroke-dasharray="4 3" stroke-width="2" style="stroke:var(--sup)"/><line x1="'+xd+'" y1="'+(y2-10)+'" x2="'+xs+'" y2="'+(y2-10)+'" stroke-width="3" style="stroke:var(--hl)"/><circle cx="'+xd+'" cy="'+y2+'" r="5.5" style="fill:var(--dem)"/><circle cx="'+xs+'" cy="'+y2+'" r="5.5" style="fill:var(--sup)"/><text x="'+((xd+xs)/2)+'" y="'+(y2-16)+'" text-anchor="middle" font-size="12.5" font-weight="800" style="fill:var(--hl)">'+(g.Qs>g.Qd?"surplus":"shortage")+' '+Math.abs(g.Qs-g.Qd)+'</text>'}
+  r.innerHTML=h;requestAnimationFrame(function(){r.style.opacity=1})}
+
+/* ---------- ticker and title ---------- */
+var TICK=[["WES","$76.00","u"],["A$","US$0.69","d"],["PERTH RENT","$750/wk","u"],["MIN WAGE","$26.44/hr","u"],["GST","10%",""],["EGGS","LIMIT 2 CARTONS","d"],["BANANAS","+400%","u"],["TAX-FREE THRESHOLD","$18,200",""],["CASH RATE","4.60%","u"],["PERTH MEDIAN HOUSE","$965,000","u"],["WA UNEMPLOYMENT","4.5%",""]];
+var tk=TICK.map(function(t){return'<span>'+t[0]+' <b>'+t[1]+'</b>'+(t[2]?' <i class="'+t[2]+'">'+(t[2]==="u"?"&#9650;":"&#9660;")+'</i>':"")+'</span>'}).join("");
+$("#track").innerHTML=tk+tk;
+$("#board").innerHTML=["MARKET","RUSH"].map(function(w,wi){return'<span class="word">'+w.split("").map(function(ch,i){return'<span class="flap" style="animation-delay:'+((wi*6+i)*55)+'ms">'+ch+'</span>'}).join("")+'</span>'}).join("");
+$("#board").setAttribute("aria-hidden","true");
+
+/* ---------- sound ---------- */
+var AC=null;
+function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){AC=null}}return AC}
+function tone(f,t0,dur,type,vol){var c=ac();if(!c)return;var o=c.createOscillator(),g=c.createGain();o.type=type||"sine";o.frequency.value=f;g.gain.setValueAtTime(0.0001,c.currentTime+t0);g.gain.exponentialRampToValueAtTime(vol||0.12,c.currentTime+t0+0.02);g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+t0+dur);o.connect(g);g.connect(c.destination);o.start(c.currentTime+t0);o.stop(c.currentTime+t0+dur+0.05)}
+function sfx(k){if(!SV.sound)return;if(k==="ok"){tone(660,0,.12,"triangle");tone(880,.09,.16,"triangle")}else if(k==="no"){tone(190,0,.28,"sawtooth",.07)}else if(k==="combo"){[523,659,784,1047].forEach(function(f,i){tone(f,i*.07,.14,"square",.06)})}else if(k==="end"){[392,523,659,784].forEach(function(f,i){tone(f,i*.12,.25,"triangle")})}}
+function paintSnd(){var b=$("#sndBtn");b.textContent="Sound: "+(SV.sound?"on":"off");b.setAttribute("aria-pressed",SV.sound?"true":"false")}
+$("#sndBtn").addEventListener("click",function(){SV.sound=!SV.sound;save();paintSnd();if(SV.sound){ac();if(AC&&AC.resume)AC.resume();sfx("ok")}});paintSnd();
+
+/* ---------- home ---------- */
+var mode="rush",topic="all";
+var TOPS=[["all","All topics","Mixed questions from every lesson"]].concat(Object.keys(TOPICS).map(function(k){return[k,TOPICS[k],LESSONS[k]]}));
+$("#topics").innerHTML=TOPS.map(function(t){return'<button type="button" class="topic'+(t[0]==="all"?" all on":"")+'" data-t="'+t[0]+'" role="radio" aria-checked="'+(t[0]==="all")+'"><b>'+esc(t[1])+'</b><span>'+esc(t[2])+'</span></button>'}).join("");
+$("#topics").addEventListener("click",function(e){var b=e.target.closest("[data-t]");if(!b)return;topic=b.dataset.t;[].forEach.call(this.children,function(x){var on=x===b;x.classList.toggle("on",on);x.setAttribute("aria-checked",on)})});
+document.querySelector(".modes").addEventListener("click",function(e){var b=e.target.closest("[data-mode]");if(!b)return;mode=b.dataset.mode;[].forEach.call(this.children,function(x){var on=x===b;x.classList.toggle("on",on);x.setAttribute("aria-checked",on)})});
+/* ---------- anonymous player tags: no names collected ---------- */
+var ADJ=["Bullish","Thrifty","Savvy","Speedy","Golden","Lucky","Clever","Mighty","Steady","Bold","Swift","Bright","Jolly","Brave","Cosmic","Turbo","Super","Rapid","Nimble","Sharp","Sunny","Breezy","Chilly","Fuzzy","Happy","Zippy","Snappy","Plucky","Daring","Eager","Fearless","Gentle","Groovy","Hasty","Humble","Jumpy","Keen","Lively","Loyal","Merry","Noble","Peppy","Proud","Quick","Quiet","Royal","Shiny","Silly","Sleepy","Smooth","Sneaky","Spicy","Stellar","Stormy","Sturdy","Witty","Zesty","Calm","Crafty","Dapper"];
+var ANI=["Koala","Quokka","Wombat","Numbat","Emu","Dingo","Echidna","Possum","Platypus","Kookaburra","Wallaby","Bilby","Galah","Cockatoo","Gecko","Dolphin","Kangaroo","Magpie","Penguin","Pelican","Bandicoot","Quoll","Lorikeet","Cassowary","Goanna","Dugong","Turtle","Seal","Whale","Shark","Stingray","Octopus","Crab","Lobster","Seahorse","Dragonfly","Butterfly","Beetle","Frog","Skink","Bat","Owl","Eagle","Falcon","Kingfisher","Rosella","Budgie","Brolga","Ibis","Swan","Heron","Crocodile","Python","Lizard","Bettong","Potoroo","Glider","Pademelon","Wren","Barramundi"];  /* 60 x 60 x 90 numbers = 324,000 possible tags; the database never gives the same tag out twice */
+function newTag(){return pick(ADJ)+" "+pick(ANI)+" "+(10+rnd(90))}
+function parseTag(t){var m=String(t||"").trim().replace(/\s+/g," ").match(/^([A-Za-z]+) ([A-Za-z]+) (\d{2})$/);if(!m)return null;var a=ADJ.filter(function(x){return x.toLowerCase()===m[1].toLowerCase()})[0],b=ANI.filter(function(x){return x.toLowerCase()===m[2].toLowerCase()})[0];return(a&&b&&+m[3]>=10)?a+" "+b+" "+m[3]:null}
+if(!parseTag(SV.tag)){SV.tag=newTag();SV.tagUsed=false;SV.tagReg=false;SV.tagOwn=false;save()}
+function paintTag(){$("#tagV").textContent=SV.tag;$("#tagNew").hidden=SV.tagUsed;$("#tagMsg").textContent=SV.tagUsed?"This is your tag on the leaderboard. Keep using it so your best score counts. It is written nowhere else, so keep it in the back of your book.":"Your secret leaderboard name. No real names are used. Write it in the back of your book so you can use it on another device."}
+paintTag();
+$("#tagNew").addEventListener("click",function(){SV.tag=newTag();SV.tagReg=false;SV.tagOwn=false;SV.srvBest=null;SV.srvWeek=null;save();paintTag();ensureTag()});
+$("#tagUse").addEventListener("click",function(){var t=parseTag($("#tagIn").value),m=$("#tagInMsg");if(!t){m.textContent="That is not a Market Rush tag. Check the spelling, like Thrifty Quokka 42.";return}SV.tag=t;SV.tagUsed=true;SV.tagOwn=true;SV.tagReg=false;SV.srvBest=null;SV.srvWeek=null;save();ensureTag().then(function(){myBestRefresh()});paintTag();$("#tagIn").value="";m.textContent="Done. You are playing as "+t+".";lbRefresh()});
+function paintHome(){var top=SV.scores.slice(0,5);$("#pbV").textContent=(SV.best.all||0).toLocaleString("en-AU");
+  var bestAny=SV.srvBest||0;Object.keys(SV.best).forEach(function(k){bestAny=Math.max(bestAny,SV.best[k]||0)});$("#pbV").textContent=bestAny.toLocaleString("en-AU");if(SV.srvBest!=null)$("#pbWeek").textContent="Best on the Year 8 leaderboard as "+SV.tag+": "+(SV.srvBest||0).toLocaleString("en-AU")+" all time, "+(SV.srvWeek||0).toLocaleString("en-AU")+" this week.";
+  $("#lb").innerHTML=top.length?top.map(function(s,i){return'<li><span class="r">'+(i+1)+'</span><span class="n">'+esc(s.n)+'<small>'+esc(s.tp==="all"?"All topics":TOPICS[s.tp]||"")+'</small></span><span class="s">'+s.s.toLocaleString("en-AU")+'</span></li>'}).join(""):'<li><span class="r">-</span><span class="n" style="color:var(--dim)">No scores yet. Play a Rush game.</span><span></span></li>'}
+paintHome();
+function show(id){["home","play","over"].forEach(function(s){$("#"+s).hidden=s!==id});window.scrollTo(0,0)}
+$("#playBtn").addEventListener("click",function(){if(SV.sound){ac();if(AC&&AC.resume)AC.resume()}start()});
+
+
+/* ---------- live leaderboard ---------- */
+var LB={on:!!(CONFIG.supabaseUrl&&CONFIG.supabaseKey),period:"week",busy:false};
+function lbBase(){return String(CONFIG.supabaseUrl).replace(/\/+$/,"")+"/rest/v1/"+CONFIG.table}
+function lbHead(extra){var h={apikey:CONFIG.supabaseKey};if(!/^sb_/.test(CONFIG.supabaseKey))h.Authorization="Bearer "+CONFIG.supabaseKey;for(var k in extra)h[k]=extra[k];return h}
+function weekStart(){var now=new Date(Date.now()+8*3600e3),dow=(now.getUTCDay()+6)%7;return new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()-dow)-8*3600e3).toISOString()}
+function lbKey(n,c){return String(n).toLowerCase()+"|"+String(c||"").toLowerCase()}
+function lbFetch(period){var q="select=name,class,score&order=score.desc&limit=400"+(period==="week"?"&created_at=gte."+encodeURIComponent(weekStart()):"");
+  return fetch(lbBase()+"?"+q,{headers:lbHead({})}).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}).then(function(rows){var seen={},out=[];rows.forEach(function(r){var k=lbKey(r.name,r["class"]);if(!seen[k]){seen[k]=1;out.push(r)}});return out})}
+function lbList(el,rows,me){var top=rows.slice(0,10);el.innerHTML=top.length?top.map(function(r,i){var mine=me&&lbKey(r.name,r["class"])===me;return'<li class="'+(mine?"me":"")+'"><span class="r'+(i<3?" top":"")+'">'+(i+1)+'</span><span class="n">'+esc(r.name)+(r["class"]?'<small>'+esc(r["class"])+'</small>':"")+'</span><span class="s">'+Number(r.score).toLocaleString("en-AU")+'</span></li>'}).join(""):'<li><span class="r">-</span><span class="n" style="color:var(--dim)">No scores yet'+(LB.period==="week"?" this week":"")+'. Be the first!</span><span></span></li>'}
+function myKey(){return lbKey(SV.tag,"")}
+function lbRefresh(){var el=$("#glb"),msg=$("#glbMsg"),dot=$("#liveDot");
+  if(!LB.on){dot.classList.remove("on");dot.textContent="Off";el.innerHTML="";msg.textContent="The live leaderboard is not switched on for this copy of the game. Your scores still save on this device.";return}
+  if(LB.busy)return;LB.busy=true;
+  lbFetch(LB.period).then(function(rows){lbList(el,rows,myKey());dot.classList.add("on");dot.textContent="Live";var d=new Date();msg.textContent="Updated "+d.toLocaleTimeString("en-AU",{hour:"numeric",minute:"2-digit"})+". This week starts Monday."})
+   .catch(function(){dot.classList.remove("on");dot.textContent="Offline";msg.textContent="Can't reach the leaderboard right now. Check the internet connection. Your scores still save on this device."})
+   .then(function(){LB.busy=false})}
+document.querySelector(".tabs").addEventListener("click",function(e){var b=e.target.closest("[data-p]");if(!b)return;LB.period=b.dataset.p;[].forEach.call(this.children,function(x){var on=x===b;x.classList.toggle("on",on);x.setAttribute("aria-selected",on)});lbRefresh()});
+lbRefresh();setInterval(function(){if(!document.hidden&&!$("#home").hidden)lbRefresh()},20000);
+function lbPost(g){return fetch(lbBase(),{method:"POST",headers:lbHead({"Content-Type":"application/json",Prefer:"return=minimal"}),body:JSON.stringify({name:g.name,score:g.score,answered:g.n,correct:g.right,best_streak:g.bestStreak})}).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status)})}
+
+
+/* ---------- reserve the player tag so no two students share one ---------- */
+var tagBusy=null;
+function regTag(t){return fetch(String(CONFIG.supabaseUrl).replace(/\/+$/,"")+"/rest/v1/"+(CONFIG.tagsTable||"market_rush_tags"),{method:"POST",headers:lbHead({"Content-Type":"application/json",Prefer:"return=minimal"}),body:JSON.stringify({tag:t})})
+  .then(function(r){if(r.ok)return"ok";if(r.status===409)return"taken";throw new Error("HTTP "+r.status)})}
+function ensureTag(){if(!LB.on)return Promise.resolve(false);if(SV.tagReg)return Promise.resolve(true);if(tagBusy)return tagBusy;
+  var tries=0,old=SV.tag;
+  function attempt(){tries++;return regTag(SV.tag).then(function(res){
+      if(res==="ok"||(res==="taken"&&SV.tagOwn)){SV.tagReg=true;save();paintTag();if(SV.tag!==old)tagNote(old);return true}
+      if(tries>=10)return false;SV.tag=newTag();save();return attempt()})}
+  tagBusy=attempt().catch(function(){return false}).then(function(v){tagBusy=null;return v});return tagBusy}
+function tagNote(old){var m=$("#tagMsg");if(m)m.textContent=old+" was already taken by another student, so your tag is now "+SV.tag+". Write it in the back of your book."}
+ensureTag().then(function(){myBestRefresh()});
+
+
+/* ---------- your best score, from the leaderboard, on any laptop ---------- */
+function myBestRefresh(){if(!LB.on)return;var tag=SV.tag;
+  function one(week){var q="select=score&name=eq."+encodeURIComponent(tag)+"&order=score.desc&limit=1"+(week?"&created_at=gte."+encodeURIComponent(weekStart()):"");return fetch(lbBase()+"?"+q,{headers:lbHead({})}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(rows){return rows.length?Number(rows[0].score):0})}
+  Promise.all([one(false),one(true)]).then(function(v){SV.srvBest=v[0];SV.srvWeek=v[1];save();paintHome()}).catch(function(){})}
+
+/* ---------- score code ---------- */
+function scode(n,s){var str=String(n).trim().toLowerCase()+"|"+s+"|parr-mr8",h=2166136261;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)>>>0}var c=h.toString(36).toUpperCase();while(c.length<6)c="0"+c;return c.slice(-6)}
+$("#ckBtn").addEventListener("click",function(){var n=$("#ckName").value,s=parseInt(String($("#ckScore").value).replace(/[^0-9]/g,""),10),c=String($("#ckCode").value).trim().toUpperCase(),m=$("#ckMsg");
+  if(!n||isNaN(s)||!c){m.textContent="Fill in the name, score and code.";m.style.color="var(--soft)";return}
+  if(scode(n,s)===c){m.textContent="Real score. "+n+" scored "+s.toLocaleString("en-AU")+".";m.style.color="var(--good)"}else{m.textContent="Does not match. Check the spelling of the name and the score.";m.style.color="var(--bad)"}});
+
+/* ---------- game state ---------- */
+var G=null,raf=0,last=0;
+function start(){var board=LB.on&&mode==="rush"&&topic==="all";
+  G={mode:mode,topic:topic,name:SV.tag,cls:"",board:board,score:0,time:60,streak:0,bestStreak:0,n:0,right:0,used:{},miss:[],per:{},asked:{},locked:false,q:null,qStart:0,over:false,lastGen:-3,bonusAt:{}};
+  Object.keys(TOPICS).forEach(function(k){G.per[k]=[0,0];G.asked[k]=0});
+  $("#timeWrap").style.visibility=mode==="rush"?"visible":"hidden";$("#multBox").style.visibility=mode==="rush"?"visible":"hidden";$("#hud").querySelector(".score").style.visibility=mode==="rush"?"visible":"hidden";
+  $("#pracbar").hidden=mode==="rush";$("#hud").hidden=mode!=="rush";
+  show("play");paintHud();next();last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}
+function level(){return G.mode==="prac"?3:Math.min(3,1+Math.floor(G.right/4))}
+function mult(){var s=G.streak;return s>=10?4:s>=6?3:s>=3?2:1}
+function loop(t){var dt=(t-last)/1000;last=t;if(G&&!G.over&&G.mode==="rush"&&!G.locked){G.time-=dt;if(G.time<=0){G.time=0;paintHud();end();return}paintHud()}raf=requestAnimationFrame(loop)}
+function paintHud(){if(!G)return;$("#scV").textContent=G.score.toLocaleString("en-AU");var m=mult();$("#mV").textContent="x"+m;$("#multBox").setAttribute("data-m",m);$("#multBox").classList.toggle("hot",m>=3);$("#stV").textContent=G.streak;
+  $("#pips").innerHTML=Array.from({length:10},function(_,i){return'<i class="'+(i<Math.min(G.streak,10)?"on":"")+'"></i>'}).join("");
+  var pct=Math.max(0,Math.min(1,G.time/60));$("#tfill").style.width=(pct*100)+"%";var low=G.time<10;$("#tbar").classList.toggle("low",low);$("#tV").textContent=Math.ceil(G.time)+"s";$("#tV").classList.toggle("low",low);
+  $("#qCount").textContent="Question "+(G.n+1)+" · Level "+level();
+  $("#prV").textContent=G.right+" right out of "+G.n}
+function chooseTopic(){if(G.topic!=="all")return G.topic;var ks=Object.keys(TOPICS),min=Infinity;ks.forEach(function(k){min=Math.min(min,G.asked[k])});return pick(ks.filter(function(k){return G.asked[k]===min}))}
+function pickQ(){var t=chooseTopic(),L=level(),gens=GENS[t];G.asked[t]++;
+  gens=gens.filter(function(f){return!(f.pracOnly&&G.mode==="rush")});
+  if(gens.length&&G.n-G.lastGen>=2&&Math.random()<0.35){var gq=pick(gens)();if(gq.d<=L||G.mode==="prac"){G.lastGen=G.n;return gq}}
+  var cand=BANK.filter(function(q){return q.t===t&&q.d<=L&&!G.used[q.id]});
+  if(!cand.length){BANK.forEach(function(q){if(q.t===t)delete G.used[q.id]});cand=BANK.filter(function(q){return q.t===t&&q.d<=L})}
+  if(G.mode==="rush"){var top=cand.filter(function(q){return q.d===L});if(top.length&&Math.random()<0.6)cand=top}
+  var q=pick(cand);G.used[q.id]=1;return q}
+
+/* ---------- drawing ---------- */
+var SM=150/210;
+function eqPoint(code,s){var x=70+(150+s*SM)/(2*SM);var y=(code[0]==="D")?190-(x-70)*SM:40+(x-70)*SM;return[x,y]}
+function shiftSVG(){return'<svg viewBox="0 0 320 236" role="img" aria-label="Demand and supply graph"><defs><clipPath id="clp"><rect x="50" y="18" width="262" height="186"/></clipPath>'+
+  '<marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var(--hl)"/></marker></defs>'+
+  '<line x1="50" y1="204" x2="310" y2="204" style="stroke:var(--soft)" stroke-width="2"/><line x1="50" y1="204" x2="50" y2="14" style="stroke:var(--soft)" stroke-width="2"/>'+
+  '<text x="180" y="228" text-anchor="middle" font-size="13" style="fill:var(--soft)">Quantity</text><text x="22" y="112" text-anchor="middle" font-size="13" transform="rotate(-90 22 112)" style="fill:var(--soft)">Price</text>'+
+  '<g clip-path="url(#clp)"><g id="gD1"><line x1="70" y1="40" x2="280" y2="190" stroke-width="4" style="stroke:var(--dem)" stroke-linecap="round"/></g><g id="gS1"><line x1="70" y1="190" x2="280" y2="40" stroke-width="4" style="stroke:var(--sup)" stroke-linecap="round"/></g>'+
+  '<g id="gNew" style="opacity:0;transition:transform .9s cubic-bezier(.3,1,.4,1),opacity .3s"></g></g>'+
+  '<text x="284" y="200" font-size="14" font-weight="700" style="fill:var(--dem)" id="lD1">D1</text><text x="284" y="44" font-size="14" font-weight="700" style="fill:var(--sup)" id="lS1">S1</text>'+
+  '<line x1="50" y1="115" x2="175" y2="115" stroke-dasharray="4 4" style="stroke:var(--dim)"/><line x1="175" y1="115" x2="175" y2="204" stroke-dasharray="4 4" style="stroke:var(--dim)"/>'+
+  '<circle cx="175" cy="115" r="6" style="fill:var(--ink)"/><text x="160" y="106" font-size="13" font-weight="700" style="fill:var(--ink)">E1</text>'+
+  '<g id="gE2" style="opacity:0;transition:opacity .4s"></g><g id="gArr" style="opacity:0;transition:opacity .4s"></g></svg>'}
+function animateShift(svg,code,down){var s=55,gN=svg.querySelector("#gNew"),gE=svg.querySelector("#gE2"),gA=svg.querySelector("#gArr");
+  if(code==="N"){var m=down?[210,140]:[140,90];gE.innerHTML='<circle cx="'+m[0]+'" cy="'+m[1]+'" r="6" style="fill:var(--hl)"/><text x="'+(m[0]+(down?8:-30))+'" y="'+(m[1]-10)+'" font-size="13" font-weight="700" style="fill:var(--hl)">B</text><text x="186" y="128" font-size="13" font-weight="700" style="fill:var(--ink)">A</text>';
+    gA.innerHTML='<path d="M175 115 L'+(down?"203 135":"147 95")+'" stroke-width="2.5" style="stroke:var(--hl)" marker-end="url(#ah)"/><text x="60" y="34" font-size="12.5" style="fill:var(--hl)">Slide along the same curve</text>';
+    setTimeout(function(){gA.style.opacity=1;gE.style.opacity=1},60);return}
+  var dir=code[1]==="R"?1:-1,isD=code[0]==="D";
+  var e=70*SM;gN.innerHTML=isD?'<line x1="0" y1="'+(40-e)+'" x2="350" y2="'+(190+e)+'" stroke-width="4" style="stroke:var(--dem)"/>':'<line x1="0" y1="'+(190+e)+'" x2="350" y2="'+(40-e)+'" stroke-width="4" style="stroke:var(--sup)"/>';
+  svg.querySelector(isD?"#gD1":"#gS1").style.opacity=.35;
+  var p=eqPoint(code,dir*s);
+  var xb=dir>0?230:250,lx=(xb+dir*s+8).toFixed(1),ly=(isD?40+(xb-70)*SM-6:190-(xb-70)*SM+16).toFixed(1);
+  gE.innerHTML='<line x1="50" y1="'+p[1].toFixed(1)+'" x2="'+p[0].toFixed(1)+'" y2="'+p[1].toFixed(1)+'" stroke-dasharray="4 4" style="stroke:var(--hl)"/><line x1="'+p[0].toFixed(1)+'" y1="'+p[1].toFixed(1)+'" x2="'+p[0].toFixed(1)+'" y2="204" stroke-dasharray="4 4" style="stroke:var(--hl)"/><circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="6" style="fill:var(--hl)"/><text x="'+(p[0]+9).toFixed(1)+'" y="'+(p[1]+4).toFixed(1)+'" font-size="13" font-weight="700" style="fill:var(--hl)">E2</text><text x="'+lx+'" y="'+ly+'" font-size="14" font-weight="700" style="fill:'+(isD?"var(--dem)":"var(--sup)")+'">'+(isD?"D2":"S2")+'</text>';
+  var ay=isD?62:62,ax=isD?(70+(ay-40)/SM):(70+(190-ay)/SM);
+  gA.innerHTML='<path d="M'+(ax+dir*6).toFixed(1)+' '+ay+' L'+(ax+dir*(s-6)).toFixed(1)+' '+ay+'" stroke-width="3" style="stroke:var(--hl)" marker-end="url(#ah)"/>';
+  requestAnimationFrame(function(){gN.style.opacity=1;requestAnimationFrame(function(){gN.style.transform="translateX("+(dir*s)+"px)"})});
+  setTimeout(function(){gE.style.opacity=1;gA.style.opacity=1},reduce?0:700)}
+var AP={1:["M106 104 L250 104",150,104,true],2:["M254 124 L110 124",210,124,false],3:["M254 144 L110 144",150,144,true],4:["M106 164 L250 164",210,164,false],5:["M80 92 L121 47",100,70,false],6:["M240 47 L280 92",260,70,false],7:["M80 174 L121 215",100,196,false],8:["M240 215 L280 174",260,196,false]};
+function flowSVG(hl,tap){var h='<svg viewBox="0 0 360 262" role="img" aria-label="Circular flow model with four sectors and eight numbered arrows"><defs>';
+  [["mk","var(--dim)"],["ma","var(--hl)"],["mg","var(--good)"],["mr","var(--bad)"]].forEach(function(m){h+='<marker id="'+m[0]+'" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:'+m[1]+'"/></marker>'});
+  h+='</defs>';
+  [["Financial sector",120,8,120,36],["Households",8,92,98,82],["Businesses",254,92,98,82],["Government",120,218,120,36]].forEach(function(b){h+='<rect x="'+b[1]+'" y="'+b[2]+'" width="'+b[3]+'" height="'+b[4]+'" rx="9" style="fill:var(--raise);stroke:var(--line)" stroke-width="1.5"/><text x="'+(b[1]+b[3]/2)+'" y="'+(b[2]+b[4]/2+5)+'" text-anchor="middle" font-size="13" font-weight="700" style="fill:var(--ink)">'+b[0]+'</text>'});
+  for(var n=1;n<=8;n++){var a=AP[n],on=n===hl,col=on?"var(--hl)":(tap?"var(--soft)":"var(--dim)"),mk=on?"ma":"mk";
+    h+='<g class="'+(tap?"arrow-hit":"")+'" data-n="'+n+'"'+(tap?' tabindex="0" role="button" aria-label="Arrow '+n+'"':"")+'>'+(tap?'<path d="'+a[0]+'" stroke-width="26" style="stroke:transparent" pointer-events="stroke"/>':"")+
+      '<path class="ln" d="'+a[0]+'" stroke-width="'+(on?4:2.5)+'" style="stroke:'+col+'" '+(a[3]?'stroke-dasharray="7 5"':'')+' marker-end="url(#'+mk+')" fill="none"/>'+
+      '<circle class="badge" cx="'+a[1]+'" cy="'+a[2]+'" r="10" style="fill:'+(on?"var(--hl)":"var(--panel2)")+';stroke:'+col+'" stroke-width="1.5"/><text x="'+a[1]+'" y="'+(a[2]+4.5)+'" text-anchor="middle" font-size="12" font-weight="800" style="fill:'+(on?"var(--onhl)":"var(--ink)")+'" pointer-events="none">'+n+'</text></g>'}
+  return h+'</svg>'}
+function colourArrow(svg,n,col,mk){var g=svg.querySelector('[data-n="'+n+'"]');if(!g)return;var l=g.querySelector(".ln"),c=g.querySelector(".badge");l.style.stroke=col;l.setAttribute("stroke-width","4");l.setAttribute("marker-end","url(#"+mk+")");c.style.stroke=col;c.style.fill=col;g.querySelector("text").style.fill="var(--onsem)"}
+function tableHTML(q){return'<div class="tblwrap"><table class="dt"><tr>'+q.cols.map(function(c){return"<th>"+esc(c)+"</th>"}).join("")+'</tr>'+q.rows.map(function(r){return'<tr'+(q.hl===r[0]?' class="hl"':'')+'><td>'+money(r[0])+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td></tr>'}).join("")+'</table></div>'}
+function bracketHTML(){return'<div class="tblwrap"><table class="dt"><tr><th>Taxable income</th><th>Tax</th></tr>'+BRT.map(function(t,i){return'<tr><td>'+t+'</td><td>'+BRR[i]+'</td></tr>'}).join("")+'</table></div>'}
+
+
+/* ---------- split "question? item" into a question line and a separate item card ---------- */
+function splitQ(q){var t=q.q||"",m;
+  if(q.k==="tap"&&(m=t.match(/^(.*\.) Tap the arrow\.$/)))return{stem:"Tap the arrow that shows this.",item:m[1]};
+  if((q.k==="shift"||q.k==="gdrag")&&(m=t.match(/^(.*?[.!]) ([^.]*\?)$/)))return{stem:m[2],item:m[1]};
+  if((m=t.match(/^(.*\?) ([^?]+)$/))&&m[2].length>2)return{stem:m[1],item:m[2]};
+  return{stem:t,item:null}}
+function qHTML(q){var p=splitQ(q),st='<p class="qtext">'+esc(p.stem)+'</p>';if(!p.item)return st;var it='<div class="qitem">'+esc(p.item)+'</div>';return(q.k==="shift"||q.k==="gdrag"||q.k==="tap")?it+st:st+it}
+
+/* ---------- render a question ---------- */
+var card=$("#card");
+function next(){if(G.over)return;if(G.mode==="rush"&&G.time<=0){end();return}
+  var q=pickQ();G.q=q;G.locked=false;paintHud();
+  var head='<div class="qhead"><span class="ttag">'+esc(TOPICS[q.t])+'</span><span class="diff" aria-label="Difficulty '+q.d+' of 3">'+[1,2,3].map(function(i){return'<i class="'+(i<=q.d?"on":"")+'"></i>'}).join("")+(G.mode==="rush"?'<span style="margin-left:6px">'+(q.d*100)+' pts</span>':'')+'</span></div>';
+  var body="";
+  if(q.k==="mc"||q.k==="table"){var order=shuffle(q.o.map(function(t,i){return i}));q._ord=order;
+    var opts='<div class="opts">'+order.map(function(oi,j){return'<button type="button" class="opt" data-i="'+oi+'"><span class="k">'+(j+1)+'</span><span>'+esc(q.o[oi])+'</span></button>'}).join("")+'</div>';
+    body=qHTML(q)+(q.k==="table"?tableHTML(q):"")+((q.gen==="tax"||q.showTax)?'<p class="lbl">Australian resident tax rates, 2026–27</p>'+bracketHTML():"")+opts}
+  else if(q.k==="graph"){var og=shuffle(q.o.map(function(t,i){return i}));body=qHTML(q)+'<div class="split big"><div class="fig">'+graphSVG(q.g)+'</div><div class="opts">'+og.map(function(oi,j){return'<button type="button" class="opt" data-i="'+oi+'"><span class="k">'+(j+1)+'</span><span>'+esc(q.o[oi])+'</span></button>'}).join("")+'</div></div>'}
+  else if(q.k==="bin"){body=qHTML(q)+'<div class="bins">'+q.o.map(function(t,i){return'<button type="button" class="opt" data-i="'+i+'"><span class="k">'+(i===0?"&#8592;":"&#8594;")+'</span><span>'+esc(t)+'</span></button>'}).join("")+'</div>'}
+  else if(q.k==="shift"){var B=[["DR","Demand shifts right"],["DL","Demand shifts left"],["SR","Supply shifts right"],["SL","Supply shifts left"],["N","No shift: slide along"]];
+    body=qHTML(q)+'<p class="qsub">Which curve moves, and which way?</p><div class="split"><div class="fig">'+shiftSVG()+'</div><div class="opts">'+B.map(function(b,j){return'<button type="button" class="opt" data-c="'+b[0]+'"><span class="k">'+(j+1)+'</span><span>'+b[1]+'</span></button>'}).join("")+'</div></div>'}
+  else if(q.k==="flowwhat"){var cands=shuffle([1,2,3,4,5,6,7,8].filter(function(x){return x!==q.arrow})).slice(0,3),ord=shuffle([q.arrow].concat(cands));q._ord=ord;
+    body='<p class="qtext">What flows along the highlighted arrow ('+q.arrow+')?</p><div class="split"><div class="fig">'+flowSVG(q.arrow,false)+'<p class="tapnote">Dashed arrows are things. Solid arrows are money.</p></div><div class="opts">'+ord.map(function(n,j){return'<button type="button" class="opt" data-n="'+n+'"><span class="k">'+(j+1)+'</span><span>'+esc(ARW[n].name)+'</span></button>'}).join("")+'</div></div>'}
+  else if(q.k==="tap"){body=qHTML(q)+'<div class="fig" style="max-width:560px;width:100%;align-self:center">'+flowSVG(0,true)+'<p class="tapnote">Tap an arrow, or press its number key.</p></div>'}
+  if(XR[q.k])body=XR[q.k](q);
+  card.setAttribute("data-t",q.t);card.innerHTML=head+body+'<div id="fbBox"></div>';
+  G.qStart=performance.now();
+  wire(q)}
+function wire(q){if(XW[q.k]){XW[q.k](q);return}
+  if(q.k==="graph"){card.querySelectorAll(".opt").forEach(function(b){b.addEventListener("click",function(){var i=+b.dataset.i;choose(i===q.a,b,function(){return card.querySelector('.opt[data-i="'+q.a+'"]')},q.o[q.a],function(){revealGraph(card.querySelector("svg"),q)})})})}
+  else if(q.k==="mc"||q.k==="table"||q.k==="bin"){card.querySelectorAll(".opt").forEach(function(b){b.addEventListener("click",function(){var i=+b.dataset.i;choose(i===q.a,b,function(){return card.querySelector('.opt[data-i="'+q.a+'"]')},q.o[q.a])})})}
+  else if(q.k==="shift"){card.querySelectorAll(".opt").forEach(function(b){b.addEventListener("click",function(){var ok=b.dataset.c===q.a;choose(ok,b,function(){return card.querySelector('.opt[data-c="'+q.a+'"]')},SHIFT_NAME[q.a],function(){animateShift(card.querySelector("svg"),q.a,/cuts|lowers/.test(q.q))})})})}
+  else if(q.k==="flowwhat"){card.querySelectorAll(".opt").forEach(function(b){b.addEventListener("click",function(){choose(+b.dataset.n===q.arrow,b,function(){return card.querySelector('.opt[data-n="'+q.arrow+'"]')},"Arrow "+q.arrow+": "+ARW[q.arrow].name)})});q.why=ARW[q.arrow].why+" It goes from "+ARW[q.arrow].from.toLowerCase()+" to "+ARW[q.arrow].to.toLowerCase()+"."}
+  else if(q.k==="tap"){var svg=card.querySelector("svg");svg.querySelectorAll(".arrow-hit").forEach(function(g){var f=function(){tapArrow(q,+g.dataset.n)};g.addEventListener("click",f);g.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();f()}})})}}
+function tapArrow(q,n){if(G.locked)return;var svg=card.querySelector("svg"),ok=n===q.arrow;
+  if(!ok)colourArrow(svg,n,"var(--bad)","mr");colourArrow(svg,q.arrow,"var(--good)","mg");
+  choose(ok,null,null,"Arrow "+q.arrow+": "+ARW[q.arrow].name)}
+
+
+/* ---------- interactive question types ---------- */
+var BIGQ={sort:1,match:1,gtap:1,gdrag:1,price:1,cfdrop:1,qslide:1,num:1};
+function svgPt(svg,e){var p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse())}
+function checkBtn(label){return'<button type="button" class="cont ibtn ichk" disabled>'+label+'</button>'}
+var XR={},XW={};
+/* tap the tax row */
+XR.taxrow=function(q){return qHTML(q)+'<p class="lbl">Australian resident tax rates, 2026–27</p><div class="trows">'+BRT.map(function(t,i){return'<button type="button" class="trow" data-i="'+i+'"><span class="k">'+(i+1)+'</span><span class="tb1">'+t+'</span><span class="tb2">'+BRR[i]+'</span></button>'}).join("")+'</div>'};
+XW.taxrow=function(q){card.querySelectorAll(".trow").forEach(function(b){b.addEventListener("click",function(){choose(+b.dataset.i===q.a,b,function(){return card.querySelector('.trow[data-i="'+q.a+'"]')},"The "+BRT[q.a]+" row")})})};
+/* tap a point on the graph */
+XR.gtap=function(q){return qHTML(q)+'<div class="split big"><div class="fig">'+graphSVG(q.g).replace(/<\/svg>$/,'<g class="mark"></g></svg>')+'<p class="tapnote">Tap the graph to place your point. Arrow keys move it.</p></div><div class="ictl"><p class="readout" id="ro">Your point: not placed yet</p>'+checkBtn("Check my point")+'</div></div>'};
+XW.gtap=function(q){var svg=card.querySelector("svg"),mk=svg.querySelector(".mark"),btn=card.querySelector(".ichk"),pt=null;svg.setAttribute("tabindex","0");svg.style.cursor="crosshair";
+  function draw(){if(!pt)return;var x=GX(pt[0]),y=GY(pt[1]);mk.innerHTML='<line x1="56" y1="'+y+'" x2="'+x+'" y2="'+y+'" stroke-dasharray="3 3" stroke-width="1.6" style="stroke:var(--ink)"/><line x1="'+x+'" y1="'+y+'" x2="'+x+'" y2="248" stroke-dasharray="3 3" stroke-width="1.6" style="stroke:var(--ink)"/><circle cx="'+x+'" cy="'+y+'" r="8" style="fill:none;stroke:var(--ink)" stroke-width="3"/><circle cx="'+x+'" cy="'+y+'" r="2.5" style="fill:var(--ink)"/>';$("#ro").textContent="Your point: "+money(pt[1])+" and "+pt[0];btn.disabled=false}
+  function set(qv,pv){pt=[Math.max(0,Math.min(600,Math.round(qv/50)*50)),Math.max(0,Math.min(10,Math.round(pv)))];draw()}
+  svg.addEventListener("click",function(e){if(G.locked)return;var p=svgPt(svg,e);set((p.x-56)/0.465,(248-p.y)/21.6)});
+  svg.addEventListener("keydown",function(e){if(G.locked)return;var d={ArrowLeft:[-50,0],ArrowRight:[50,0],ArrowUp:[0,1],ArrowDown:[0,-1]}[e.key];if(!d){if(e.key==="Enter"&&pt)btn.click();return}e.preventDefault();if(!pt)pt=[300,5];set(pt[0]+d[0],pt[1]+d[1])});
+  btn.addEventListener("click",function(){if(!pt)return;var ok=pt[0]===q.target[0]&&pt[1]===q.target[1];choose(ok,null,null,money(q.target[1])+" and "+q.target[0],function(){var x=GX(q.target[0]),y=GY(q.target[1]);mk.innerHTML+='<circle cx="'+x+'" cy="'+y+'" r="9" style="fill:none;stroke:var(--good)" stroke-width="3.5"/><text x="'+(x+12)+'" y="'+(y-10)+'" font-size="13" font-weight="800" style="fill:var(--good)">&#10003; here</text>'})})};
+/* set the price */
+XR.price=function(q){return qHTML(q)+'<div class="split big"><div class="fig">'+graphSVG(q.g).replace(/<\/svg>$/,'<g class="pl"></g></svg>')+'</div><div class="ictl"><label class="lbl" for="pIn">Your price</label><div class="pbig" id="pV"></div><input type="range" id="pIn" min="1" max="9" step="1"><div class="ros"><div class="ro"><span class="rk">Buyers want</span><span class="rv" id="qdV"></span></div><div class="ro"><span class="rk">You supply</span><span class="rv" id="qsV"></span></div></div>'+checkBtn("Lock in this price")+'</div></div>'};
+XW.price=function(q){var g=q.g,svg=card.querySelector("svg"),pl=svg.querySelector(".pl"),inp=$("#pIn"),btn=card.querySelector(".ichk");
+  var start=q.target>=5?1:9;inp.value=start;
+  function up(){var P=+inp.value,qd=Math.max(0,g.q0-g.a*(P-g.p0)),qs=Math.max(0,g.q0+g.b*(P-g.p0)),y=GY(P);$("#pV").textContent=money(P);$("#qdV").textContent=qd;$("#qsV").textContent=qs;
+    pl.innerHTML='<line x1="56" y1="'+y+'" x2="335" y2="'+y+'" stroke-width="2.5" stroke-dasharray="7 4" style="stroke:var(--ink)"/>'+(qd<=600?'<circle cx="'+GX(qd)+'" cy="'+y+'" r="6" style="fill:var(--dem)"/>':"")+(qs<=600?'<circle cx="'+GX(qs)+'" cy="'+y+'" r="6" style="fill:var(--sup)"/>':"");btn.disabled=false}
+  inp.addEventListener("input",up);up();
+  btn.addEventListener("click",function(){var P=+inp.value;choose(P===q.target,null,null,money(q.target),function(){if(q.task==="eq")revealGraph(svg,{g:g,mode:"eq"})})})};
+/* shift the curve yourself */
+XR.gdrag=function(q){var e=70*SM,s='<svg viewBox="0 0 320 236" role="img" aria-label="Demand and supply graph you can change"><defs><clipPath id="clq"><rect x="50" y="18" width="262" height="186"/></clipPath></defs>'+
+  '<line x1="50" y1="204" x2="310" y2="204" style="stroke:var(--soft)" stroke-width="2"/><line x1="50" y1="204" x2="50" y2="14" style="stroke:var(--soft)" stroke-width="2"/>'+
+  '<text x="180" y="228" text-anchor="middle" font-size="13" style="fill:var(--soft)">Quantity</text><text x="22" y="112" text-anchor="middle" font-size="13" transform="rotate(-90 22 112)" style="fill:var(--soft)">Price</text>'+
+  '<g clip-path="url(#clq)"><line x1="70" y1="40" x2="280" y2="190" stroke-width="3" style="stroke:var(--dem);opacity:.3"/><line x1="70" y1="190" x2="280" y2="40" stroke-width="3" style="stroke:var(--sup);opacity:.3"/>'+
+  '<g class="mv" data-c="D" style="transition:transform .25s"><line x1="0" y1="'+(40-e)+'" x2="350" y2="'+(190+e)+'" stroke-width="26" style="stroke:transparent;cursor:ew-resize" pointer-events="stroke"/><line x1="0" y1="'+(40-e)+'" x2="350" y2="'+(190+e)+'" stroke-width="4.5" style="stroke:var(--dem)" pointer-events="none"/></g>'+
+  '<g class="mv" data-c="S" style="transition:transform .25s"><line x1="0" y1="'+(190+e)+'" x2="350" y2="'+(40-e)+'" stroke-width="26" style="stroke:transparent;cursor:ew-resize" pointer-events="stroke"/><line x1="0" y1="'+(190+e)+'" x2="350" y2="'+(40-e)+'" stroke-width="4.5" style="stroke:var(--sup)" pointer-events="none"/></g></g>'+
+  '<text x="284" y="200" font-size="14" font-weight="700" style="fill:var(--dem)" class="lD">D1</text><text x="284" y="44" font-size="14" font-weight="700" style="fill:var(--sup)" class="lS">S1</text>'+
+  '<circle cx="175" cy="115" r="6" style="fill:var(--ink)"/><text x="160" y="106" font-size="13" font-weight="700" style="fill:var(--ink)">E1</text><g class="e2"></g></svg>';
+  return qHTML(q)+'<p class="qsub">Drag the curve that changes, left or right. Or use the arrow buttons.</p><div class="split"><div class="fig">'+s+'</div><div class="ictl">'+
+  '<div class="mvrow"><span class="lbl" style="color:var(--dem)">Demand</span><button type="button" class="ibtn" data-c="D" data-d="-1" aria-label="Move demand left">&#9664; Left</button><button type="button" class="ibtn" data-c="D" data-d="1" aria-label="Move demand right">Right &#9654;</button></div>'+
+  '<div class="mvrow"><span class="lbl" style="color:var(--sup)">Supply</span><button type="button" class="ibtn" data-c="S" data-d="-1" aria-label="Move supply left">&#9664; Left</button><button type="button" class="ibtn" data-c="S" data-d="1" aria-label="Move supply right">Right &#9654;</button></div>'+
+  '<p class="readout" id="ro">Nothing moved yet.</p><button type="button" class="ghost ibtn rst">Reset</button>'+checkBtn("Check my shift")+'</div></div>'};
+XW.gdrag=function(q){var svg=card.querySelector("svg"),st={D:0,S:0},btn=card.querySelector(".ichk");
+  function paint(){["D","S"].forEach(function(c){svg.querySelector('.mv[data-c="'+c+'"]').style.transform="translateX("+(st[c]*55)+"px)";svg.querySelector(".l"+c).textContent=c+(st[c]?"2":"1")});
+    var e2=svg.querySelector(".e2"),moved=(st.D?1:0)+(st.S?1:0);e2.innerHTML="";
+    if(moved===1){var code=(st.D?"D":"S")+((st.D||st.S)>0?"R":"L"),p=eqPoint(code,(st.D||st.S)*55);e2.innerHTML='<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="6" style="fill:var(--hl)"/><text x="'+(p[0]+9).toFixed(1)+'" y="'+(p[1]+4).toFixed(1)+'" font-size="13" font-weight="800" style="fill:var(--hl)">E2</text>'}
+    $("#ro").textContent=moved?((st.D?"Demand moved "+(st.D>0?"right":"left"):"")+(st.D&&st.S?", ":"")+(st.S?"Supply moved "+(st.S>0?"right":"left"):"")+"."):"Nothing moved yet.";btn.disabled=!moved}
+  card.querySelectorAll(".ibtn[data-c]").forEach(function(b){b.addEventListener("click",function(){if(G.locked)return;var c=b.dataset.c;st[c]=Math.max(-1,Math.min(1,st[c]+(+b.dataset.d)));paint()})});
+  card.querySelector(".rst").addEventListener("click",function(){if(G.locked)return;st={D:0,S:0};paint()});
+  var drag=null;svg.querySelectorAll(".mv").forEach(function(g){g.addEventListener("pointerdown",function(e){if(G.locked)return;drag={c:g.dataset.c,x0:svgPt(svg,e).x,b:st[g.dataset.c]};g.style.transition="none";try{svg.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault()})});
+  svg.addEventListener("pointermove",function(e){if(!drag)return;var dx=Math.max(-70,Math.min(70,svgPt(svg,e).x-drag.x0+drag.b*55));svg.querySelector('.mv[data-c="'+drag.c+'"]').style.transform="translateX("+dx+"px)"});
+  function endDrag(e){if(!drag)return;var g=svg.querySelector('.mv[data-c="'+drag.c+'"]'),dx=svgPt(svg,e).x-drag.x0+drag.b*55;g.style.transition="transform .25s";st[drag.c]=Math.abs(dx)<20?0:(dx>0?1:-1);drag=null;paint()}
+  svg.addEventListener("pointerup",endDrag);svg.addEventListener("pointercancel",endDrag);
+  btn.addEventListener("click",function(){var want={D:0,S:0};want[q.a[0]]=q.a[1]==="R"?1:-1;var ok=st.D===want.D&&st.S===want.S;
+    choose(ok,null,null,SHIFT_NAME[q.a],function(){if(!ok){st=want;paint()}})})};
+/* sorting round */
+XR.sort=function(q){return qHTML(q)+'<div class="srows">'+q.items.map(function(it,i){return'<div class="srow" data-i="'+i+'"><span class="st">'+esc(it[0])+'</span><span class="seg">'+q.cats.map(function(c,j){return'<button type="button" data-j="'+j+'">'+esc(c)+'</button>'}).join("")+'</span><span class="mark2"></span></div>'}).join("")+'</div>'+checkBtn("Check all "+q.items.length)};
+XW.sort=function(q){var sel={},btn=card.querySelector(".ichk");
+  card.querySelectorAll(".srow").forEach(function(r){r.addEventListener("click",function(e){var b=e.target.closest("button");if(!b||G.locked)return;var i=+r.dataset.i;sel[i]=+b.dataset.j;r.querySelectorAll("button").forEach(function(x){x.classList.toggle("on",x===b)});btn.disabled=Object.keys(sel).length<q.items.length})});
+  btn.addEventListener("click",function(){var ok=true;q.items.forEach(function(it,i){var good=q.cats[sel[i]]===it[1],r=card.querySelector('.srow[data-i="'+i+'"]');if(!good)ok=false;r.classList.add(good?"ok":"no");r.querySelector(".mark2").textContent=good?"✓":"✗ "+it[1]});
+    choose(ok,null,null,q.items.map(function(it){return it[0]+": "+it[1]}).join(". "))})};
+/* matching round */
+XR.match=function(q){var R=shuffle(q.pairs.map(function(p,i){return i}));q._r=R;return qHTML(q)+'<p class="qsub">Tap one on the left, then its partner on the right. Tap again to undo.</p><div class="mgrid"><div class="mcol">'+q.pairs.map(function(p,i){return'<button type="button" class="mbtn" data-l="'+i+'"><span class="pn"></span><span>'+esc(p[0])+'</span></button>'}).join("")+'</div><div class="mcol">'+R.map(function(j){return'<button type="button" class="mbtn" data-r="'+j+'"><span class="pn"></span><span>'+esc(q.pairs[j][1])+'</span></button>'}).join("")+'</div></div>'+checkBtn("Check my matches")};
+XW.match=function(q){var pr={},sel=null,btn=card.querySelector(".ichk"),n=q.pairs.length;
+  function paint(){card.querySelectorAll(".mbtn").forEach(function(b){b.classList.remove("sel","paired");b.querySelector(".pn").textContent=""});
+    Object.keys(pr).forEach(function(l){var L=card.querySelector('.mbtn[data-l="'+l+'"]'),Rb=card.querySelector('.mbtn[data-r="'+pr[l]+'"]'),num=String(+l+1);L.classList.add("paired");Rb.classList.add("paired");L.querySelector(".pn").textContent=num;Rb.querySelector(".pn").textContent=num});
+    if(sel!=null)card.querySelector('.mbtn[data-l="'+sel+'"]').classList.add("sel");btn.disabled=Object.keys(pr).length<n}
+  card.querySelectorAll(".mbtn[data-l]").forEach(function(b){b.addEventListener("click",function(){if(G.locked)return;var l=+b.dataset.l;if(pr[l]!=null){delete pr[l];sel=null}else sel=(sel===l?null:l);paint()})});
+  card.querySelectorAll(".mbtn[data-r]").forEach(function(b){b.addEventListener("click",function(){if(G.locked)return;var r=+b.dataset.r;Object.keys(pr).forEach(function(l){if(pr[l]===r){delete pr[l];if(sel==null)sel=+l}});if(sel!=null){pr[sel]=r;sel=null}paint()})});
+  btn.addEventListener("click",function(){var ok=true;for(var l=0;l<n;l++){var good=pr[l]===l;if(!good)ok=false;card.querySelector('.mbtn[data-l="'+l+'"]').classList.add(good?"right":"wrong")}
+    choose(ok,null,null,q.pairs.map(function(p){return p[0]+" → "+p[1]}).join(". "))})};
+
+
+/* place labels on the circular flow */
+var CFA={1:["M116 122 L400 122",260,122,true],2:["M404 150 L120 150",260,150,false],3:["M404 178 L120 178",260,178,true],4:["M116 206 L400 206",260,206,false],5:["M84 104 L188 44",136,74,false],6:["M332 44 L436 104",384,74,false],7:["M84 224 L188 284",136,254,false],8:["M332 284 L436 224",384,254,false]};
+function cfBig(q){var h='<svg viewBox="0 0 520 330" role="img" aria-label="Circular flow model with labels to place"><defs><marker id="mk2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:var(--soft)"/></marker></defs>';
+  [["Financial sector",186,4,148,44],["Households",4,104,112,120],["Businesses",404,104,112,120],["Government",186,284,148,42]].forEach(function(b){h+='<rect x="'+b[1]+'" y="'+b[2]+'" width="'+b[3]+'" height="'+b[4]+'" rx="10" style="fill:var(--raise);stroke:var(--line)" stroke-width="1.5"/><text x="'+(b[1]+b[3]/2)+'" y="'+(b[2]+b[4]/2+5.5)+'" text-anchor="middle" font-size="15" font-weight="800" style="fill:var(--ink)">'+b[0]+'</text>'});
+  for(var n=1;n<=8;n++){var a=CFA[n];h+='<path d="'+a[0]+'" stroke-width="2.5" style="stroke:var(--soft)" fill="none" marker-end="url(#mk2)"'+(a[3]?' stroke-dasharray="7 5"':'')+'/>'}
+  for(var m=1;m<=8;m++){var b=CFA[m],bl=q.blanks.indexOf(m)>=0,w=172,x=b[1]-w/2,y=b[2]-13;
+    h+=bl?'<g class="slot" data-n="'+m+'" tabindex="0" role="button" aria-label="Empty label, arrow from '+ARW[m].from+' to '+ARW[m].to+'"><rect x="'+x+'" y="'+y+'" width="'+w+'" height="26" rx="13" stroke-width="2" stroke-dasharray="5 4" style="fill:var(--panel);stroke:var(--accent)"/><text x="'+b[1]+'" y="'+(b[2]+5.5)+'" text-anchor="middle" font-size="14.5" font-weight="700" style="fill:var(--accent)">?</text></g>'
+      :'<g><rect x="'+x+'" y="'+y+'" width="'+w+'" height="26" rx="13" style="fill:var(--panel2);stroke:var(--line)" stroke-width="1.2"/><text x="'+b[1]+'" y="'+(b[2]+5.5)+'" text-anchor="middle" font-size="14.5" font-weight="600" style="fill:var(--ink)">'+CFL[m]+'</text></g>'}
+  return h+'</svg>'}
+XR.cfdrop=function(q){var cards=shuffle(q.blanks.slice());return qHTML(q)+'<div class="split big cfsplit"><div class="fig wide"><p class="tapnote narrowonly">Scroll sideways to see the whole diagram.</p><div class="scrollx">'+cfBig(q)+'</div><p class="tapnote">Dashed arrows are real things. Solid arrows are money.</p></div><div class="ictl"><span class="lbl">Labels to place</span><div class="tray">'+cards.map(function(n){return'<button type="button" class="card2" data-n="'+n+'">'+CFL[n]+'</button>'}).join("")+'</div>'+checkBtn("Check my labels")+'</div></div>'};
+XW.cfdrop=function(q){var svg=card.querySelector("svg"),placed={},sel=null,btn=card.querySelector(".ichk"),ghost=null,drag=null;
+  function paint(){svg.querySelectorAll(".slot").forEach(function(g){var n=+g.dataset.n,t=g.querySelector("text");t.textContent=placed[n]?CFL[placed[n]]:"?";g.classList.toggle("filled",!!placed[n])});
+    var used={};Object.keys(placed).forEach(function(k){used[placed[k]]=1});
+    card.querySelectorAll(".card2").forEach(function(b){var n=+b.dataset.n;b.classList.toggle("used",!!used[n]);b.classList.toggle("sel",sel===n);b.disabled=!!used[n]||G.locked});
+    btn.disabled=Object.keys(placed).length<q.blanks.length}
+  function put(slot,lab){Object.keys(placed).forEach(function(k){if(placed[k]===lab)delete placed[k]});placed[slot]=lab;sel=null;paint()}
+  card.querySelectorAll(".card2").forEach(function(b){b.addEventListener("click",function(){if(G.locked)return;var n=+b.dataset.n;sel=sel===n?null:n;paint()});
+    b.addEventListener("pointerdown",function(e){if(G.locked||b.disabled)return;drag={n:+b.dataset.n,x:e.clientX,y:e.clientY,moved:false}});});
+  document.addEventListener("pointermove",function mv(e){if(!drag)return;if(!drag.moved&&Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)<8)return;drag.moved=true;
+    if(!ghost){ghost=document.createElement("div");ghost.className="ghostcard";ghost.textContent=CFL[drag.n];document.body.appendChild(ghost)}ghost.style.left=e.clientX+"px";ghost.style.top=e.clientY+"px";e.preventDefault()});
+  document.addEventListener("pointerup",function(e){if(!drag)return;var d=drag;drag=null;if(ghost){ghost.remove();ghost=null}if(!d.moved)return;var el=document.elementFromPoint(e.clientX,e.clientY),sl=el&&el.closest?el.closest(".slot"):null;if(sl&&!G.locked)put(+sl.dataset.n,d.n)});
+  svg.querySelectorAll(".slot").forEach(function(g){var f=function(){if(G.locked)return;var n=+g.dataset.n;if(sel!=null)put(n,sel);else if(placed[n]){delete placed[n];paint()}};g.addEventListener("click",f);g.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();f()}})});
+  btn.addEventListener("click",function(){var ok=true;q.blanks.forEach(function(n){var good=placed[n]===n,g=svg.querySelector('.slot[data-n="'+n+'"]'),r=g.querySelector("rect"),t=g.querySelector("text");if(!good)ok=false;r.style.stroke=good?"var(--good)":"var(--bad)";r.setAttribute("stroke-dasharray",good?"none":"5 4");r.setAttribute("stroke-width","3");t.style.fill=good?"var(--good)":"var(--bad)";t.textContent=(good?"✓ ":"✗ ")+(good?CFL[n]:CFL[n])});
+    choose(ok,null,null,q.blanks.map(function(n){return CFL[n]+" goes from "+ARW[n].from.toLowerCase()+" to "+ARW[n].to.toLowerCase()}).join(". "))});
+  paint()};
+/* slide the quantity */
+XR.qslide=function(q){return qHTML(q)+'<div class="split big"><div class="fig">'+graphSVG(q.g).replace(/<\/svg>$/,'<g class="ql"></g></svg>')+'</div><div class="ictl"><label class="lbl" for="qIn">Your quantity</label><div class="pbig" id="qV"></div><input type="range" id="qIn" min="0" max="600" step="50"><div class="steprow"><button type="button" class="ibtn" data-s="-50" aria-label="Less, 50 fewer">&#9664; 50 less</button><button type="button" class="ibtn" data-s="50" aria-label="More, 50 more">50 more &#9654;</button></div>'+checkBtn("Lock in this quantity")+'</div></div>'};
+XW.qslide=function(q){var svg=card.querySelector("svg"),ql=svg.querySelector(".ql"),inp=$("#qIn"),btn=card.querySelector(".ichk");inp.value=q.target<=300?600:0;
+  function up(){var Q=+inp.value,x=GX(Q);$("#qV").textContent=Q;ql.innerHTML='<line x1="'+x+'" y1="32" x2="'+x+'" y2="248" stroke-width="3" style="stroke:var(--hl)"/><path d="M'+(x-7)+' 250 L'+(x+7)+' 250 L'+x+' 240 z" style="fill:var(--hl)"/>';btn.disabled=false}
+  inp.addEventListener("input",up);card.querySelectorAll(".steprow .ibtn").forEach(function(b){b.addEventListener("click",function(){if(G.locked)return;inp.value=Math.max(0,Math.min(600,+inp.value+(+b.dataset.s)));up()})});up();
+  btn.addEventListener("click",function(){choose(+inp.value===q.target,null,null,String(q.target),function(){var x=GX(q.target);ql.innerHTML+='<line x1="'+x+'" y1="32" x2="'+x+'" y2="248" stroke-width="3" stroke-dasharray="6 4" style="stroke:var(--good)"/><text x="'+(x+6)+'" y="46" font-size="13" font-weight="800" style="fill:var(--good)">&#10003; '+q.target+'</text>'})})};
+
+/* typed answers: accept 5, $5, 5.00, five, 5 dollars, 500 cents, "a shortage of 200", 1,200 and so on */
+var NW={zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19,twenty:20,thirty:30,forty:40,fourty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90};
+function wordsToDigits(t){return t.replace(/\b((?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fourty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|and|[\s-])+)\b/g,function(m){var words=m.trim().split(/[\s-]+/).filter(function(w){return w&&w!=="and"});if(!words.length||!words.some(function(w){return w in NW}))return m;var total=0,cur=0;words.forEach(function(w){if(w in NW)cur+=NW[w];else if(w==="hundred")cur=(cur||1)*100;else if(w==="thousand"){total+=(cur||1)*1000;cur=0}});return" "+(total+cur)+" "})}
+function readAnswer(raw){var t=" "+String(raw||"").toLowerCase()+" ";t=wordsToDigits(t);t=t.replace(/(\d),(\d{3})/g,"$1$2");
+  var nums=[],re=/(\d+(?:\.\d+)?|\.\d+)\s*(cents?|c\b)?/g,m;while((m=re.exec(t))){var v=parseFloat(m[1]);if(m[2])v=v/100;nums.push(v)}
+  return nums.length?nums[nums.length-1]:NaN}
+
+/* typed number answers */
+XR.num=function(q){var fig=q.fig==="graph"?'<div class="fig">'+graphSVG(q.g)+'</div>':q.fig==="table"?tableHTML(q):"";
+  return qHTML(q)+(fig?'<div class="split big">'+fig+'<div class="ictl">':'<div class="ictl narrow">')+'<label class="lbl" for="nIn">Your answer</label><div class="numin">'+(q.unit==="$"?'<span class="unit">$</span>':"")+'<input id="nIn" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"></div><p class="hint">Type a number. '+(q.unit==="$"?"5, $5, 5.00 and five dollars all work.":"200, 200 units and two hundred all work.")+' Press Enter or Check.</p>'+checkBtn("Check")+'</div>'+(fig?'</div>':'')};
+XW.num=function(q){var inp=$("#nIn"),btn=card.querySelector(".ichk");setTimeout(function(){try{inp.focus({preventScroll:true})}catch(_){}},50);
+  inp.addEventListener("input",function(){btn.disabled=isNaN(readAnswer(inp.value))});
+  inp.addEventListener("keydown",function(e){if(e.key==="Enter"&&!btn.disabled){e.preventDefault();e.stopPropagation();btn.click()}});
+  btn.addEventListener("click",function(){var v=readAnswer(inp.value);if(isNaN(v))return;inp.disabled=true;var ok=Math.abs(v-q.ans)<0.005;inp.classList.add(ok?"right":"wrong");
+    choose(ok,null,null,(q.unit==="$"?(q.ans%1?money2(q.ans):money(q.ans)):String(q.ans)),function(){if(q.fig==="graph")revealGraph(card.querySelector("svg"),{g:q.g,mode:q.g.P!=null?"gap":"eq"})})})};
+
+/* ---------- answering ---------- */
+function choose(ok,btn,getRight,rightText,after){if(G.locked||G.over)return;G.locked=true;
+  var q=G.q,secs=(performance.now()-G.qStart)/1000;G.n++;G.per[q.t][1]++;
+  card.querySelectorAll(".opt,.trow,.ibtn,.seg button,.mbtn,.card2,input").forEach(function(b){b.disabled=true});
+  if(btn)btn.classList.add(ok?"right":"wrong");if(!ok&&getRight){var r=getRight();if(r)r.classList.add("right")}
+  if(after)after();
+  var fb=$("#fbBox");
+  if(ok){G.right++;G.per[q.t][0]++;G.streak++;G.bestStreak=Math.max(G.bestStreak,G.streak);
+    if(G.mode==="rush"){var m=mult(),bonus=Math.max(0,Math.min(100,Math.round((6-secs)*20))),pts=q.d*100*m+bonus;G.score+=pts;G.time+=(BIGQ[q.k]?4:2);floatTxt("+"+pts.toLocaleString("en-AU"),false);
+      var st=G.streak,msg=null;if(st===3)msg="x2 MULTIPLIER";else if(st===6)msg="x3 MULTIPLIER";else if(st===10){msg="x4 ON FIRE +5s";G.time+=5}else if(st===15){msg="UNSTOPPABLE +5s";G.time+=5}else if(st>15&&st%5===0){msg="LEGEND +5s";G.time+=5}
+      if(msg){banner(msg);sfx("combo")}else sfx("ok")}else sfx("ok");
+    paintHud();
+    fb.innerHTML='<div class="fb ok"><span class="h">&#10003; Correct!</span><span class="why">'+esc(q.why||"")+'</span></div>';
+    if(G.mode==="rush"){var wait=(q.k==="shift"||q.k==="tap"||q.k==="graph"||BIGQ[q.k])?1800:1100;setTimeout(function(){if(!G.over)next()},wait)}else addCont(fb)}
+  else{G.streak=0;G.miss.push({t:q.t,q:q.k==="flowwhat"?"What flows along arrow "+q.arrow+" (from "+ARW[q.arrow].from.toLowerCase()+" to "+ARW[q.arrow].to.toLowerCase()+")?":q.q,a:rightText,w:q.why||""});
+    if(G.mode==="rush"){G.time=Math.max(0,G.time-4);floatTxt("−4s",true)}sfx("no");
+    if(!reduce){card.classList.remove("shake");void card.offsetWidth;card.classList.add("shake")}
+    paintHud();
+    fb.innerHTML='<div class="fb no"><span class="h">&#10007; Not quite.</span><span class="ans">'+(q.k==="sort"||q.k==="match"||q.k==="cfdrop"?"The answers: ":"The answer: ")+esc(rightText)+'</span>'+((q.k==="sort"||q.k==="match"||q.k==="cfdrop")?"":'<span class="why">'+esc(q.why||"")+'</span>')+'</div>';addCont(fb)}}
+function addCont(fb){var b=document.createElement("button");b.type="button";b.className="cont";b.id="contBtn";b.textContent=(G.mode==="rush"&&G.time<=0)?"See my score":"Next question (Enter)";b.disabled=true;fb.firstChild.appendChild(b);
+  setTimeout(function(){b.disabled=false;b.focus({preventScroll:true})},G.mode==="rush"?700:300);
+  b.addEventListener("click",function(){if(G.mode==="rush"&&G.time<=0)end();else next()})}
+function floatTxt(t,minus){var s=document.createElement("span");s.className="float"+(minus?" minus":"");s.textContent=t;card.appendChild(s);setTimeout(function(){s.remove()},1000)}
+function banner(t){var b=document.createElement("div");b.className="banner";b.textContent=t;document.body.appendChild(b);setTimeout(function(){b.remove()},1300)}
+
+/* ---------- keys ---------- */
+document.addEventListener("keydown",function(e){if($("#play").hidden||!G||G.over)return;if(e.target&&e.target.tagName==="INPUT")return;
+  var c=$("#contBtn");if(c&&(e.key==="Enter"||e.key===" ")){e.preventDefault();if(!c.disabled)c.click();return}
+  if(G.locked)return;var q=G.q;
+  if(q.k==="bin"){if(e.key==="ArrowLeft"||e.key==="1"){e.preventDefault();card.querySelectorAll(".opt")[0].click()}else if(e.key==="ArrowRight"||e.key==="2"){e.preventDefault();card.querySelectorAll(".opt")[1].click()}return}
+  if(q.k==="tap"){var n=parseInt(e.key,10);if(n>=1&&n<=8){e.preventDefault();tapArrow(q,n)}return}
+  if(q.k==="taxrow"){var r=parseInt(e.key,10),rs=card.querySelectorAll(".trow");if(r>=1&&r<=rs.length){e.preventDefault();rs[r-1].click()}return}
+  if(BIGQ[q.k])return;
+  var k=parseInt(e.key,10),bs=card.querySelectorAll(".opt");if(k>=1&&k<=bs.length){e.preventDefault();bs[k-1].click()}});
+$("#quitBtn").addEventListener("click",function(){if(G)G.over=true;cancelAnimationFrame(raf);paintHome();show("home");lbRefresh()});
+$("#finBtn").addEventListener("click",function(){end()});
+
+/* ---------- results ---------- */
+var RANKS=[[0,"Market Rookie"],[1500,"Price Taker"],[3500,"Supply Star"],[6000,"Equilibrium Expert"],[9000,"Economics Legend"]];
+function rankFor(s){var r=RANKS[0][1];RANKS.forEach(function(x){if(s>=x[0])r=x[1]});return r}
+function end(){if(!G||G.over)return;G.over=true;cancelAnimationFrame(raf);sfx("end");
+  var acc=G.n?Math.round(G.right/G.n*100):0,isR=G.mode==="rush",newPB=false,code="";
+  if(isR){var prev=SV.best[G.topic]||0;if(G.score>prev&&G.score>0){SV.best[G.topic]=G.score;newPB=true}
+    SV.scores.push({n:G.name,s:G.score,tp:G.topic,acc:acc,d:new Date().toISOString().slice(0,10)});SV.scores.sort(function(a,b){return b.s-a.s});SV.scores=SV.scores.slice(0,10);save();code=scode(G.name,G.score)}
+  var tps=Object.keys(TOPICS).filter(function(k){return G.per[k][1]>0});
+  var weak=tps.filter(function(k){return G.per[k][1]>=2}).sort(function(a,b){return G.per[a][0]/G.per[a][1]-G.per[b][0]/G.per[b][1]})[0];
+  var h='<div><p class="kick">'+(isR?"Rush":"Practice")+' · '+esc(G.topic==="all"?"All topics":TOPICS[G.topic])+'</p>';
+  if(isR)h+='<div class="big">'+G.score.toLocaleString("en-AU")+'</div><p class="rank">'+rankFor(G.score)+'</p>';else h+='<div class="big">'+G.right+' / '+G.n+'</div><p class="rank">questions right</p>';
+  h+='</div>'+(newPB?'<span class="newpb">NEW PERSONAL BEST</span>':"");
+  h+='<div class="stats"><div class="stat"><div class="v">'+acc+'%</div><div class="l">Accuracy</div></div><div class="stat"><div class="v">'+G.bestStreak+'</div><div class="l">Best streak</div></div><div class="stat"><div class="v">'+G.n+'</div><div class="l">Answered</div></div></div>';
+  if(tps.length){h+='<div class="panel"><span class="lbl">How you went in each topic</span><div class="tbars">'+tps.map(function(k){var p=G.per[k],pc=Math.round(p[0]/p[1]*100);return'<div class="tb"><span>'+TOPICS[k]+'</span><span class="bar"><i class="'+(pc>=75?"":pc>=50?"mid":"lo")+'" style="width:'+Math.max(4,pc)+'%"></i></span><span class="p">'+p[0]+'/'+p[1]+'</span></div>'}).join("")+'</div>'+
+    (weak&&G.per[weak][0]<G.per[weak][1]?'<p class="revise">Revise next: <b>'+TOPICS[weak]+'</b> ('+esc(LESSONS[weak].toLowerCase())+'). Look back at your notes, then play a '+TOPICS[weak]+' round in Practice.</p>':'<p class="revise">Nothing to fix from this round. Try a harder topic, or go for a higher score.</p>')+'</div>'}
+  if(G.board&&G.score>0)h+='<div class="panel"><span class="lbl">Year 8 leaderboard: this week</span><p class="posted" id="postMsg">Posting your score...</p><ol class="lb" id="olb"></ol></div>';
+  else if(isR&&LB.on&&G.topic!=="all")h+='<p class="hint">Only Rush games on <b>All topics</b> go on the Year 8 leaderboard.</p>';
+  if(isR)h+='<div class="code"><span class="lbl">Show your teacher</span><span>'+esc(G.name)+' · '+G.score.toLocaleString("en-AU")+'</span><span>Code <b>'+code+'</b></span></div>';
+  h+='<div class="row"><button class="go" type="button" id="againBtn" style="flex:1;min-width:200px">Play again</button><button class="ghost" type="button" id="menuBtn">Change topic or mode</button></div>';
+  if(G.miss.length){h+='<div class="panel"><span class="lbl">Questions to learn from ('+G.miss.length+')</span><ul class="miss">'+G.miss.map(function(m){return'<li><span class="lbl" style="font-size:11.5px">'+TOPICS[m.t]+'</span><span class="q">'+esc(m.q)+'</span><span class="a">Answer: '+esc(m.a)+'</span>'+(m.w?'<span class="w">'+esc(m.w)+'</span>':"")+'</li>'}).join("")+'</ul></div>'}
+  else if(G.n)h+='<div class="panel"><span class="lbl">Questions to learn from</span><p>None. Every answer was right.</p></div>';
+  $("#over").innerHTML=h;show("over");
+  $("#againBtn").addEventListener("click",function(){mode=G.mode;topic=G.topic;start()});
+  $("#menuBtn").addEventListener("click",function(){paintHome();show("home");lbRefresh()});
+  if(newPB)confetti();
+  if(G.board&&G.score>0){var gg=G,me=null;ensureTag().then(function(okTag){if(!okTag)throw new Error("tag");gg.name=SV.tag;me=lbKey(gg.name,gg.cls);return lbPost(gg)}).then(function(){SV.tagUsed=true;save();paintTag();myBestRefresh();return lbFetch("week")}).then(function(rows){lbList($("#olb"),rows,me);var i=-1;rows.forEach(function(r,j){if(i<0&&lbKey(r.name,r["class"])===me)i=j});var pm=$("#postMsg");if(!pm)return;pm.textContent=i>=0?("You're #"+(i+1)+" out of "+rows.length+" on this week's Year 8 leaderboard!"+(i>0?" "+(Number(rows[i-1].score)-Number(rows[i].score)).toLocaleString("en-AU")+" points to catch #"+i+".":" Top of the board!")):"Score posted."})
+    .catch(function(){var pm=$("#postMsg");if(pm)pm.textContent="Couldn't post your score. Check the internet connection. It is still saved on this device."})}}
+
+/* ---------- confetti ---------- */
+function confetti(){if(reduce)return;var cv=$("#confetti"),cx=cv.getContext("2d"),W=cv.width=window.innerWidth,H=cv.height=window.innerHeight,cols=["#0072B2","#E69F00","#009E73","#CC79A7","#56B4E9","#D55E00"],P=[];
+  for(var i=0;i<140;i++)P.push({x:W/2+(Math.random()-.5)*W*.3,y:H*.35,vx:(Math.random()-.5)*12,vy:-Math.random()*12-4,r:4+Math.random()*5,c:pick(cols),a:Math.random()*6});
+  var t0=performance.now();(function fr(t){var el=t-t0;cx.clearRect(0,0,W,H);P.forEach(function(p){p.vy+=.35;p.x+=p.vx;p.y+=p.vy;p.a+=.2;cx.save();cx.translate(p.x,p.y);cx.rotate(p.a);cx.fillStyle=p.c;cx.fillRect(-p.r/2,-p.r/4,p.r,p.r/2);cx.restore()});if(el<2200)requestAnimationFrame(fr);else cx.clearRect(0,0,W,H)})(t0)}
+
+window.__MR={BANK:BANK,GENS:GENS,scode:scode,state:function(){return G}};
+})();
+
+</script>
+
+</body></html>
