@@ -408,7 +408,6 @@ table.dt tr.hl td{font-weight:800}
 .hud .score .v{color:var(--t-mk)}
 .mult[data-m="2"] .v{color:var(--t-cf)}.mult[data-m="3"] .v{color:var(--t-sh)}.mult[data-m="4"] .v{color:var(--ver)}
 .pips i.on:nth-child(-n+3){background:var(--t-cf)}.pips i.on:nth-child(n+4):nth-child(-n+6){background:var(--t-sh)}.pips i.on:nth-child(n+7){background:var(--ver)}
-.lb li:nth-child(1) .r.top{background:#F0C419;color:#1F1A00}.lb li:nth-child(2) .r.top{background:#C9D1DB;color:#14213D}.lb li:nth-child(3) .r.top{background:#D9965B;color:#2A1600}
 .lb .r.top{border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:13px}
 .big{color:var(--t-mk)}
 .rank{color:var(--t-sh)}
@@ -418,6 +417,21 @@ table.dt tr.hl td{font-weight:800}
 .timebar i{background:linear-gradient(90deg,var(--grn),var(--sky))}
 @media (min-width:1000px){.opts:has(> .opt:nth-child(3):last-child){grid-template-columns:repeat(3,minmax(0,1fr))}
   .diff i.on{background:var(--t-mk)}}
+
+/* leaderboard controls, class codes */
+.lbctl{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.lb li{grid-template-columns:30px minmax(0,1fr) auto}
+.lb.long{max-height:430px;overflow-y:auto;padding-right:6px}
+.lbme{margin:0;font-size:15px;color:var(--soft)}.lbme b{color:var(--ink)}
+.lbfoot{align-items:center;justify-content:space-between}
+.lb li .r.top{background:var(--panel2);color:var(--ink)}
+.lb li .r.p1{background:#F0C419;color:#1F1A00}.lb li .r.p2{background:#C9D1DB;color:#14213D}.lb li .r.p3{background:#D9965B;color:#2A1600}
+.clsbox{border-style:solid}.clsn{flex:1;min-width:0;font-size:16px}.clsn small{color:var(--dim)}
+.chk.mk{grid-template-columns:minmax(0,1fr) minmax(0,2fr) auto}
+@media (max-width:600px){.chk.mk{grid-template-columns:minmax(0,1fr)}}
+.mkcode{display:block;font-size:34px;font-weight:800;letter-spacing:.14em;color:var(--accent);margin:6px 0}
+.field .lbl small{text-transform:none;letter-spacing:0;font-weight:500;color:var(--dim)}
+.clsf .hint:empty{display:none}
 
 </style>
 <div class="ticker" aria-hidden="true"><div class="track" id="track"></div></div>
@@ -431,10 +445,13 @@ table.dt tr.hl td{font-weight:800}
 
   <div class="cols">
     <div class="panel">
-      <div class="field"><span class="lbl">Your player tag</span>
+      <div class="field clsf"><span class="lbl">Your player tag</span>
         <div class="tagbox"><span class="ptag" id="tagV" aria-live="polite"></span><button class="ghost" type="button" id="tagNew">Get a different tag</button></div>
         <span class="hint" id="tagMsg">Your secret leaderboard name. No real names are used. Write it in the back of your book so you can use it on another device.</span>
         <details class="tagother"><summary>Already have a tag? Use it on this device</summary><div class="row" style="margin-top:8px"><input id="tagIn" placeholder="Like Thrifty Quokka 42" autocomplete="off" aria-label="Your player tag"><button class="ghost" type="button" id="tagUse">Use this tag</button></div><p class="hint" id="tagInMsg" aria-live="polite"></p></details>
+        <details class="tagother" id="clsJoin"><summary>Got a class code from your teacher? Join your class board</summary><div class="row" style="margin-top:8px"><input id="clsIn" placeholder="Like K7PQ2M" maxlength="8" autocomplete="off" aria-label="Class code" style="flex:1;min-width:0;text-transform:uppercase"><button class="ghost" type="button" id="clsBtn">Join class</button></div></details>
+        <div class="tagbox clsbox" id="clsHave" hidden><span class="clsn">Your class: <b id="clsName"></b> <small>(code <span id="clsCode"></span>)</small></span><button class="ghost" type="button" id="clsLeave">Leave</button></div>
+        <span class="hint" id="clsMsg" aria-live="polite"></span>
       </div>
       <div class="field"><span class="lbl">Mode</span>
         <div class="modes" role="radiogroup" aria-label="Mode">
@@ -449,11 +466,13 @@ table.dt tr.hl td{font-weight:800}
 
     <div style="display:flex;flex-direction:column;gap:18px;min-width:0">
       <div class="panel" id="glbPanel">
-        <div class="pb"><span class="lbl">Year 8 leaderboard</span><span class="live" id="liveDot">Live</span></div>
+        <div class="pb"><span class="lbl" id="lbTitle">Year 8 leaderboard</span><span class="live" id="liveDot">Live</span></div>
         <p class="hint">Rush mode, all topics. Players show as their tags, so nobody knows who is who. Your best score counts.</p>
-        <div class="tabs" role="tablist"><button type="button" class="tab on" data-p="week" role="tab" aria-selected="true">This week</button><button type="button" class="tab" data-p="all" role="tab" aria-selected="false">All time</button></div>
+        <div class="lbctl"><div class="tabs" role="group" aria-label="Which board"><button type="button" class="tab on" data-sc="year" aria-pressed="true">Year 8</button><button type="button" class="tab" data-sc="class" id="scClass" aria-pressed="false">My class</button></div>
+        <div class="tabs" role="group" aria-label="When"><button type="button" class="tab on" data-p="week" aria-pressed="true">This week</button><button type="button" class="tab" data-p="all" aria-pressed="false">All time</button></div></div>
         <ol class="lb" id="glb"></ol>
-        <p class="hint" id="glbMsg"></p>
+        <p class="lbme" id="glbMe" aria-live="polite"></p>
+        <div class="row lbfoot"><button type="button" class="ghost" id="lbSize">Show the top 50</button><span class="hint" id="glbMsg"></span></div>
       </div>
       <div class="panel">
         <div class="pb"><span class="lbl">Your best score</span><span class="v" id="pbV">0</span></div>
@@ -480,6 +499,7 @@ table.dt tr.hl td{font-weight:800}
     <p class="hint" style="margin-top:8px"><b>Check a score.</b> Students finish a Rush game with a score code. Type the player tag, score and code exactly as shown on their screen.</p>
     <div class="chk"><input id="ckName" placeholder="Player tag" aria-label="Player tag" autocomplete="off"><input id="ckScore" placeholder="Score" inputmode="numeric" aria-label="Score" autocomplete="off"><input id="ckCode" placeholder="Code" aria-label="Code" autocomplete="off"><button class="ghost" type="button" id="ckBtn">Check</button></div>
     <p class="chkmsg" id="ckMsg" aria-live="polite"></p>
+    <p class="hint" style="margin-top:16px"><b>Class leaderboards.</b> Each class code gives a class its own board as well as the Year 8 one. Get a code from Mr Parr and give it to your students: they type it under their player tag. Scores count on the class board from when a student joins.</p>
   </details>
 </section>
 
@@ -936,12 +956,27 @@ GENS.cf.push(genCfDrop,genCfDrop);
 GENS.ds.push(genQSlide,genQSlide,genNum,genNum);
 GENS.gv.push(function(){var q=genNum();while(q.t!=="gv")q=genNum();return q});
 
+/* ---------- question formats, so every game gets the same fair mix ---------- */
+function onlyTopic(t){return function(){var q,i=0;do{q=genNum();i++}while(q.t!==t&&i<50);return q}}
+var FGEN=[
+ ["ds","quick",genProfit,"profit"],["ds","visual",genGraph,"graph"],["ds","visual",genTable,"table"],
+ ["ds","interactive",genGTap,"gtap"],["ds","interactive",genPrice,"price"],["ds","interactive",genQSlide,"qslide"],["ds","interactive",sortOf("ds"),"sort"],["ds","interactive",matchOf("ds"),"match"],["ds","typed",onlyTopic("ds"),"num"],
+ ["sh","quick",genOutcome,"out"],["sh","interactive",genDrag,"gdrag"],["sh","interactive",sortOf("sh"),"sort"],["sh","interactive",matchOf("sh"),"match"],
+ ["mk","interactive",sortOf("mk"),"sort"],["mk","interactive",matchOf("mk"),"match"],
+ ["cf","interactive",genCfDrop,"cfdrop"],["cf","interactive",sortOf("cf"),"sort"],["cf","interactive",matchOf("cf"),"match"],
+ ["gv","quick",genGST,"gst"],["gv","visual",genTaxRate,"taxrate"],["gv","interactive",genTaxRow,"taxrow"],["gv","interactive",sortOf("gv"),"sort"],["gv","interactive",matchOf("gv"),"match"],["gv","typed",onlyTopic("gv"),"num"],
+ ["gv","visual",genTax,"tax",true]];
+function bankFmt(q){return(q.k==="mc"||q.k==="bin")?"quick":"visual"}
+/* every 8 questions: 3 quick-fire, 2 picture questions (graphs, tables, diagrams), 2 hands-on rounds, 1 typed answer */
+var CYCLE=["quick","visual","interactive","quick","typed","visual","quick","interactive"];
+
 (function(){
 "use strict";
 /* ---------- storage ---------- */
 var KEY="y8-market-rush-v1",SV={name:"",sound:false,scores:[],best:{}};
-try{var raw=JSON.parse(localStorage.getItem(KEY)||"null");if(raw&&typeof raw==="object"){SV.tag=raw.tag||"";SV.tagUsed=!!raw.tagUsed;SV.tagReg=!!raw.tagReg;SV.tagOwn=!!raw.tagOwn;SV.sound=!!raw.sound;SV.scores=Array.isArray(raw.scores)?raw.scores:[];SV.best=raw.best||{}}}catch(e){}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(SV))}catch(e){}}
+try{var raw=JSON.parse(localStorage.getItem(KEY)||"null");if(raw&&typeof raw==="object"){SV.tag=raw.tag||"";SV.seen=Array.isArray(raw.seen)?raw.seen.slice(-120):[];SV.tagUsed=!!raw.tagUsed;SV.tagReg=!!raw.tagReg;SV.tagOwn=!!raw.tagOwn;SV.sound=!!raw.sound;SV.scores=Array.isArray(raw.scores)?raw.scores:[];SV.best=raw.best||{}}}catch(e){}
+var SEEN=null;function save(){try{localStorage.setItem(KEY,JSON.stringify(SV))}catch(e){}}
+SEEN=SV.seen||[];
 function $(s){return document.querySelector(s)}
 var reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -1002,45 +1037,66 @@ function show(id){["home","play","over"].forEach(function(s){$("#"+s).hidden=s!=
 $("#playBtn").addEventListener("click",function(){if(SV.sound){ac();if(AC&&AC.resume)AC.resume()}start()});
 
 
-/* ---------- live leaderboard ---------- */
-var LB={on:!!(CONFIG.supabaseUrl&&CONFIG.supabaseKey),period:"week",busy:false};
-function lbBase(){return String(CONFIG.supabaseUrl).replace(/\/+$/,"")+"/rest/v1/"+CONFIG.table}
+/* ---------- live leaderboard: read and written only through checked database functions ---------- */
+var LB={on:!!(CONFIG.supabaseUrl&&CONFIG.supabaseKey),period:"week",scope:"year",size:10,busy:false};
 function lbHead(extra){var h={apikey:CONFIG.supabaseKey};if(!/^sb_/.test(CONFIG.supabaseKey))h.Authorization="Bearer "+CONFIG.supabaseKey;for(var k in extra)h[k]=extra[k];return h}
-function weekStart(){var now=new Date(Date.now()+8*3600e3),dow=(now.getUTCDay()+6)%7;return new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()-dow)-8*3600e3).toISOString()}
-function lbKey(n,c){return String(n).toLowerCase()+"|"+String(c||"").toLowerCase()}
-function lbFetch(period){var q="select=name,score&order=score.desc&limit=400"+(period==="week"?"&created_at=gte."+encodeURIComponent(weekStart()):"");
-  return fetch(lbBase()+"?"+q,{headers:lbHead({})}).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}).then(function(rows){var seen={},out=[];rows.forEach(function(r){var k=lbKey(r.name,r["class"]);if(!seen[k]){seen[k]=1;out.push(r)}});return out})}
-function lbList(el,rows,me){var top=rows.slice(0,10);el.innerHTML=top.length?top.map(function(r,i){var mine=me&&lbKey(r.name,r["class"])===me;return'<li class="'+(mine?"me":"")+'"><span class="r'+(i<3?" top":"")+'">'+(i+1)+'</span><span class="n">'+esc(r.name)+(r["class"]?'<small>'+esc(r["class"])+'</small>':"")+'</span><span class="s">'+Number(r.score).toLocaleString("en-AU")+'</span></li>'}).join(""):'<li><span class="r">-</span><span class="n" style="color:var(--dim)">No scores yet'+(LB.period==="week"?" this week":"")+'. Be the first!</span><span></span></li>'}
-function myKey(){return lbKey(SV.tag,"")}
-function lbRefresh(){var el=$("#glb"),msg=$("#glbMsg"),dot=$("#liveDot");
-  if(!LB.on){dot.classList.remove("on");dot.textContent="Off";el.innerHTML="";msg.textContent="The live leaderboard is not switched on for this copy of the game. Your scores still save on this device.";return}
-  if(LB.busy)return;LB.busy=true;
-  lbFetch(LB.period).then(function(rows){lbList(el,rows,myKey());dot.classList.add("on");dot.textContent="Live";var d=new Date();msg.textContent="Updated "+d.toLocaleTimeString("en-AU",{hour:"numeric",minute:"2-digit"})+". This week starts Monday."})
-   .catch(function(){dot.classList.remove("on");dot.textContent="Offline";msg.textContent="Can't reach the leaderboard right now. Check the internet connection. Your scores still save on this device."})
+function rpc(fn,body){return fetch(String(CONFIG.supabaseUrl).replace(/\/+$/,"")+"/rest/v1/rpc/"+fn,{method:"POST",headers:lbHead({"Content-Type":"application/json"}),body:JSON.stringify(body||{})})
+  .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.text()}).then(function(t){return t?JSON.parse(t):null})}
+function n0(v){return Number(v||0).toLocaleString("en-AU")}
+function myCls(){return SV.cls&&SV.cls.code?SV.cls:null}
+function lbFetch(period,cls,limit){return rpc("mr_board",{p_period:period,p_class:cls||null,p_limit:limit||10}).then(function(rows){return(rows||[]).map(function(r){return{pos:+r.pos,tag:r.tag,best:+r.best}})})}
+function lbRank(period,cls){return rpc("mr_rank",{p_tag:SV.tag,p_period:period,p_class:cls||null}).then(function(rows){var r=rows&&rows[0];return r?{pos:+r.pos,total:+r.total,best:+r.best}:null})}
+function lbList(el,rows,me,empty){el.classList.toggle("long",rows.length>12);
+  el.innerHTML=rows.length?rows.map(function(r){var mine=me&&r.tag===me,p=r.pos;return'<li class="'+(mine?"me":"")+'"><span class="r'+(p<=3?" top p"+p:"")+'">'+p+'</span><span class="n">'+esc(r.tag)+'</span><span class="s">'+n0(r.best)+'</span></li>'}).join("")
+   :'<li><span class="r">-</span><span class="n" style="color:var(--dim)">'+esc(empty||"No scores yet. Be the first!")+'</span><span></span></li>'}
+function whenTxt(p){return p==="week"?"this week":"of all time"}
+function paintScope(){var c=myCls(),cb=$("#scClass");cb.textContent=c?c.label:"My class";$("#lbTitle").textContent=LB.scope==="class"&&c?c.label+" leaderboard":"Year 8 leaderboard";
+  $("#lbSize").textContent=LB.size===10?"Show the top 50":"Show the top 10";
+  [].forEach.call(document.querySelectorAll("[data-sc]"),function(x){var on=x.dataset.sc===LB.scope;x.classList.toggle("on",on);x.setAttribute("aria-pressed",on)});
+  [].forEach.call(document.querySelectorAll("[data-p]"),function(x){var on=x.dataset.p===LB.period;x.classList.toggle("on",on);x.setAttribute("aria-pressed",on)})}
+function lbRefresh(){var el=$("#glb"),msg=$("#glbMsg"),dot=$("#liveDot"),meEl=$("#glbMe");paintScope();
+  if(!LB.on){dot.classList.remove("on");dot.textContent="Off";el.innerHTML="";meEl.textContent="";msg.textContent="The live leaderboard is not switched on for this copy of the game. Your scores still save on this device.";return}
+  var c=LB.scope==="class"?myCls():null;
+  if(LB.scope==="class"&&!c){el.innerHTML="";meEl.textContent="";msg.textContent="";meEl.textContent="Join your class first: type the class code from your teacher into the box under your player tag.";return}
+  if(LB.busy)return;LB.busy=true;var code=c?c.code:null,period=LB.period;
+  Promise.all([lbFetch(period,code,LB.size),lbRank(period,code).catch(function(){return null})]).then(function(v){
+     lbList(el,v[0],SV.tag,c?"No scores from this class yet. Be the first!":null);dot.classList.add("on");dot.textContent="Live";
+     var r=v[1];meEl.innerHTML=r?'You: <b>#'+r.pos+'</b> out of '+n0(r.total)+' players '+whenTxt(period)+', best <b>'+n0(r.best)+'</b>':"You have no score here "+whenTxt(period).replace("of all time","yet")+". Play Rush on All topics.";
+     var d=new Date();msg.textContent="Updated "+d.toLocaleTimeString("en-AU",{hour:"numeric",minute:"2-digit"})+". Weeks start on Monday."})
+   .catch(function(){dot.classList.remove("on");dot.textContent="Offline";meEl.textContent="";msg.textContent="Can't reach the leaderboard right now. Check the internet connection. Your scores still save on this device."})
    .then(function(){LB.busy=false})}
-document.querySelector(".tabs").addEventListener("click",function(e){var b=e.target.closest("[data-p]");if(!b)return;LB.period=b.dataset.p;[].forEach.call(this.children,function(x){var on=x===b;x.classList.toggle("on",on);x.setAttribute("aria-selected",on)});lbRefresh()});
-lbRefresh();setInterval(function(){if(!document.hidden&&!$("#home").hidden)lbRefresh()},20000);
-function lbPost(g){return fetch(lbBase(),{method:"POST",headers:lbHead({"Content-Type":"application/json",Prefer:"return=minimal"}),body:JSON.stringify({name:g.name,score:g.score,answered:g.n,correct:g.right,best_streak:g.bestStreak})}).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status)})}
-
+$("#glbPanel").addEventListener("click",function(e){var b=e.target.closest("[data-p],[data-sc],#lbSize");if(!b)return;
+  if(b.dataset.p)LB.period=b.dataset.p;else if(b.dataset.sc){LB.scope=b.dataset.sc;if(LB.scope==="class"&&!myCls()){$("#clsJoin").open=true;$("#clsIn").focus()}}else LB.size=LB.size===10?50:10;LB.busy=false;lbRefresh()});
+setInterval(function(){if(!document.hidden&&!$("#home").hidden)lbRefresh()},20000);
 
 /* ---------- reserve the player tag so no two students share one ---------- */
 var tagBusy=null;
-function regTag(t){return fetch(String(CONFIG.supabaseUrl).replace(/\/+$/,"")+"/rest/v1/"+(CONFIG.tagsTable||"market_rush_tags"),{method:"POST",headers:lbHead({"Content-Type":"application/json",Prefer:"return=minimal"}),body:JSON.stringify({tag:t})})
-  .then(function(r){if(r.ok)return"ok";if(r.status===409)return"taken";throw new Error("HTTP "+r.status)})}
+function regTag(t){return rpc("mr_claim_tag",{p_tag:t})}
 function ensureTag(){if(!LB.on)return Promise.resolve(false);if(SV.tagReg)return Promise.resolve(true);if(tagBusy)return tagBusy;
   var tries=0,old=SV.tag;
   function attempt(){tries++;return regTag(SV.tag).then(function(res){
       if(res==="ok"||(res==="taken"&&SV.tagOwn)){SV.tagReg=true;save();paintTag();if(SV.tag!==old)tagNote(old);return true}
-      if(tries>=10)return false;SV.tag=newTag();save();return attempt()})}
+      if(tries>=10)return false;SV.tag=newTag();SV.tagOwn=false;save();return attempt()})}
   tagBusy=attempt().catch(function(){return false}).then(function(v){tagBusy=null;return v});return tagBusy}
 function tagNote(old){var m=$("#tagMsg");if(m)m.textContent=old+" was already taken by another student, so your tag is now "+SV.tag+". Write it in the back of your book."}
-ensureTag().then(function(){myBestRefresh()});
-
 
 /* ---------- your best score, from the leaderboard, on any laptop ---------- */
-function myBestRefresh(){if(!LB.on)return;var tag=SV.tag;
-  function one(week){var q="select=score&name=eq."+encodeURIComponent(tag)+"&order=score.desc&limit=1"+(week?"&created_at=gte."+encodeURIComponent(weekStart()):"");return fetch(lbBase()+"?"+q,{headers:lbHead({})}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(rows){return rows.length?Number(rows[0].score):0})}
-  Promise.all([one(false),one(true)]).then(function(v){SV.srvBest=v[0];SV.srvWeek=v[1];save();paintHome()}).catch(function(){})}
+function myBestRefresh(){if(!LB.on)return;
+  Promise.all([lbRank("all",null),lbRank("week",null)]).then(function(v){SV.srvBest=v[0]?v[0].best:0;SV.srvWeek=v[1]?v[1].best:0;save();paintHome()}).catch(function(){})}
+
+/* ---------- class codes: a teacher makes one, students join it ---------- */
+function cleanCode(t){return String(t||"").toUpperCase().replace(/[^A-Z0-9]/g,"")}
+function paintCls(){var c=myCls();$("#clsJoin").hidden=!!c;$("#clsHave").hidden=!c;if(c){$("#clsName").textContent=c.label;$("#clsCode").textContent=c.code}}
+$("#clsBtn").addEventListener("click",function(){var code=cleanCode($("#clsIn").value),m=$("#clsMsg");
+  if(code.length!==6){m.textContent="Class codes have 6 letters and numbers, like K7PQ2M.";return}
+  if(!LB.on){m.textContent="The live leaderboard is not switched on for this copy of the game.";return}
+  m.textContent="Checking...";rpc("mr_class_label",{p_code:code}).then(function(label){
+    if(!label){m.textContent="That code doesn't match a class. Check it with your teacher.";return}
+    SV.cls={code:code,label:String(label)};save();$("#clsIn").value="";m.textContent="You're in "+label+". Your Rush scores now count on your class board too.";paintCls();LB.scope="class";lbRefresh()})
+   .catch(function(){m.textContent="Can't reach the leaderboard right now. Try again in a minute."})});
+$("#clsIn").addEventListener("keydown",function(e){if(e.key==="Enter")$("#clsBtn").click()});
+$("#clsLeave").addEventListener("click",function(){SV.cls=null;save();paintCls();$("#clsMsg").textContent="You've left the class board. Your scores still count on the Year 8 board.";LB.scope="year";lbRefresh()});
+paintCls();lbRefresh();ensureTag().then(function(){myBestRefresh();lbRefresh()});
 
 /* ---------- score code ---------- */
 function scode(n,s){var str=String(n).trim().toLowerCase()+"|"+s+"|parr-mr8",h=2166136261;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)>>>0}var c=h.toString(36).toUpperCase();while(c.length<6)c="0"+c;return c.slice(-6)}
@@ -1051,10 +1107,11 @@ $("#ckBtn").addEventListener("click",function(){var n=$("#ckName").value,s=parse
 /* ---------- game state ---------- */
 var G=null,raf=0,last=0;
 function start(){var board=LB.on&&mode==="rush"&&topic==="all";
-  G={mode:mode,topic:topic,name:SV.tag,cls:"",board:board,score:0,time:60,streak:0,bestStreak:0,n:0,right:0,used:{},miss:[],per:{},asked:{},locked:false,q:null,qStart:0,over:false,lastGen:-3,bonusAt:{}};
+  G={mode:mode,topic:topic,name:SV.tag,cls:"",board:board,slot:0,kinds:{},score:0,time:60,streak:0,bestStreak:0,n:0,right:0,used:{},miss:[],per:{},asked:{},locked:false,q:null,qStart:0,over:false,lastGen:-3,bonusAt:{}};
   Object.keys(TOPICS).forEach(function(k){G.per[k]=[0,0];G.asked[k]=0});
   $("#timeWrap").style.visibility=mode==="rush"?"visible":"hidden";$("#multBox").style.visibility=mode==="rush"?"visible":"hidden";$("#hud").querySelector(".score").style.visibility=mode==="rush"?"visible":"hidden";
   $("#pracbar").hidden=mode==="rush";$("#hud").hidden=mode!=="rush";
+  if(board){var gg0=G;G.gameP=ensureTag().then(function(ok){if(!ok)return null;gg0.gameTag=SV.tag;return rpc("mr_start_game",{p_tag:SV.tag})}).catch(function(){return null})}
   show("play");paintHud();next();last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}
 function level(){return G.mode==="prac"?3:Math.min(3,1+Math.floor(G.right/4))}
 function mult(){var s=G.streak;return s>=10?4:s>=6?3:s>=3?2:1}
@@ -1064,14 +1121,19 @@ function paintHud(){if(!G)return;$("#scV").textContent=G.score.toLocaleString("e
   var pct=Math.max(0,Math.min(1,G.time/60));$("#tfill").style.width=(pct*100)+"%";var low=G.time<10;$("#tbar").classList.toggle("low",low);$("#tV").textContent=Math.ceil(G.time)+"s";$("#tV").classList.toggle("low",low);
   $("#qCount").textContent="Question "+(G.n+1)+" · Level "+level();
   $("#prV").textContent=G.right+" right out of "+G.n}
-function chooseTopic(){if(G.topic!=="all")return G.topic;var ks=Object.keys(TOPICS),min=Infinity;ks.forEach(function(k){min=Math.min(min,G.asked[k])});return pick(ks.filter(function(k){return G.asked[k]===min}))}
-function pickQ(){var t=chooseTopic(),L=level(),gens=GENS[t];G.asked[t]++;
-  gens=gens.filter(function(f){return!(f.pracOnly&&G.mode==="rush")});
-  if(gens.length&&G.n-G.lastGen>=2&&Math.random()<0.35){var gq=pick(gens)();if(gq.d<=L||G.mode==="prac"){G.lastGen=G.n;return gq}}
-  var cand=BANK.filter(function(q){return q.t===t&&q.d<=L&&!G.used[q.id]});
-  if(!cand.length){BANK.forEach(function(q){if(q.t===t)delete G.used[q.id]});cand=BANK.filter(function(q){return q.t===t&&q.d<=L})}
+function hasFmt(t,f,L){if(FGEN.some(function(g){return g[0]===t&&g[1]===f&&!(g[4]&&G.mode==="rush")}))return true;return BANK.some(function(q){return q.t===t&&bankFmt(q)===f&&q.d<=L})}
+function pickQ(){var L=level(),ks=G.topic==="all"?Object.keys(TOPICS):[G.topic],fmt=null,tops=[];
+  for(var i=0;i<CYCLE.length;i++){var f=CYCLE[G.slot%CYCLE.length];G.slot++;tops=ks.filter(function(t){return hasFmt(t,f,L)});if(tops.length){fmt=f;break}}
+  if(!fmt){fmt="quick";tops=ks}
+  var min=Infinity;tops.forEach(function(t){min=Math.min(min,G.asked[t]||0)});var t=pick(tops.filter(function(x){return(G.asked[x]||0)===min}));G.asked[t]=(G.asked[t]||0)+1;
+  var gens=FGEN.filter(function(g){return g[0]===t&&g[1]===fmt&&!(g[4]&&G.mode==="rush")});
+  var bank=BANK.filter(function(q){return q.t===t&&bankFmt(q)===fmt&&q.d<=L});
+  var useGen=gens.length&&(!bank.length||fmt==="interactive"||fmt==="typed"||Math.random()<0.35);
+  if(useGen){var lo=Infinity;gens.forEach(function(g){lo=Math.min(lo,G.kinds[g[3]]||0)});var g=pick(gens.filter(function(x){return(G.kinds[x[3]]||0)===lo}));G.kinds[g[3]]=(G.kinds[g[3]]||0)+1;return g[2]()}
+  var cand=bank.filter(function(q){return!G.used[q.id]});if(!cand.length){bank.forEach(function(q){delete G.used[q.id]});cand=bank}
+  var fresh=cand.filter(function(q){return SEEN.indexOf(q.id)<0});if(fresh.length)cand=fresh;
   if(G.mode==="rush"){var top=cand.filter(function(q){return q.d===L});if(top.length&&Math.random()<0.6)cand=top}
-  var q=pick(cand);G.used[q.id]=1;return q}
+  var q=pick(cand);G.used[q.id]=1;SEEN.push(q.id);if(SEEN.length>120)SEEN.splice(0,SEEN.length-120);SV.seen=SEEN;save();G.kinds[q.k]=(G.kinds[q.k]||0)+1;return q}
 
 /* ---------- drawing ---------- */
 var SM=150/210;
@@ -1310,7 +1372,7 @@ $("#finBtn").addEventListener("click",function(){end()});
 /* ---------- results ---------- */
 var RANKS=[[0,"Market Rookie"],[1500,"Price Taker"],[3500,"Supply Star"],[6000,"Equilibrium Expert"],[9000,"Economics Legend"]];
 function rankFor(s){var r=RANKS[0][1];RANKS.forEach(function(x){if(s>=x[0])r=x[1]});return r}
-function end(){if(!G||G.over)return;G.over=true;cancelAnimationFrame(raf);sfx("end");
+function end(){if(!G||G.over)return;G.over=true;if(G.gameTag)G.name=G.gameTag;cancelAnimationFrame(raf);sfx("end");
   var acc=G.n?Math.round(G.right/G.n*100):0,isR=G.mode==="rush",newPB=false,code="";
   if(isR){var prev=SV.best[G.topic]||0;if(G.score>prev&&G.score>0){SV.best[G.topic]=G.score;newPB=true}
     SV.scores.push({n:G.name,s:G.score,tp:G.topic,acc:acc,d:new Date().toISOString().slice(0,10)});SV.scores.sort(function(a,b){return b.s-a.s});SV.scores=SV.scores.slice(0,10);save();code=scode(G.name,G.score)}
@@ -1332,8 +1394,17 @@ function end(){if(!G||G.over)return;G.over=true;cancelAnimationFrame(raf);sfx("e
   $("#againBtn").addEventListener("click",function(){mode=G.mode;topic=G.topic;start()});
   $("#menuBtn").addEventListener("click",function(){paintHome();show("home");lbRefresh()});
   if(newPB)confetti();
-  if(G.board&&G.score>0){var gg=G,me=null;ensureTag().then(function(okTag){if(!okTag)throw new Error("tag");gg.name=SV.tag;me=lbKey(gg.name,gg.cls);return lbPost(gg)}).then(function(){SV.tagUsed=true;save();paintTag();myBestRefresh();return lbFetch("week")}).then(function(rows){lbList($("#olb"),rows,me);var i=-1;rows.forEach(function(r,j){if(i<0&&lbKey(r.name,r["class"])===me)i=j});var pm=$("#postMsg");if(!pm)return;pm.textContent=i>=0?("You're #"+(i+1)+" out of "+rows.length+" on this week's Year 8 leaderboard!"+(i>0?" "+(Number(rows[i-1].score)-Number(rows[i].score)).toLocaleString("en-AU")+" points to catch #"+i+".":" Top of the board!")):"Score posted."})
-    .catch(function(){var pm=$("#postMsg");if(pm)pm.textContent="Couldn't post your score. Check the internet connection. It is still saved on this device."})}}
+  if(G.board&&G.score>0){var gg=G,c=myCls(),pm=function(t){var e=$("#postMsg");if(e)e.innerHTML=t};
+    var BAD={"already posted":"This game's score is already on the board.","time":"This game's time didn't check out, so the score wasn't posted.","answers":"This game's answers didn't check out, so the score wasn't posted.","counts":"This game's answers didn't check out, so the score wasn't posted.","score":"This score didn't check out, so it wasn't posted.","unknown game":"This game wasn't registered with the leaderboard, so the score wasn't posted."};
+    (gg.gameP||Promise.resolve(null)).then(function(id){if(!id)throw{msg:"This game didn't connect to the leaderboard when it started (no internet, or lots of games in a short time), so it can't be posted."};
+        return rpc("mr_submit",{p_game:id,p_tag:gg.gameTag,p_score:gg.score,p_answered:gg.n,p_correct:gg.right,p_streak:gg.bestStreak,p_class:c?c.code:null})})
+     .then(function(res){if(res!=="ok")throw{msg:BAD[res]||"The score couldn't be posted."};SV.tagUsed=true;save();paintTag();myBestRefresh();
+        return Promise.all([lbFetch("week",null,10),lbRank("week",null),c?lbRank("week",c.code).catch(function(){return null}):null])})
+     .then(function(v){lbList($("#olb"),v[0],gg.gameTag);var r=v[1],rc=v[2],t="Score posted!";
+        if(r){t="Your best this week puts you <b>#"+r.pos+"</b> out of "+n0(r.total)+" in Year 8.";var above=v[0].filter(function(x){return x.pos<r.pos}).pop();if(r.pos===1)t+=" Top of the board!";else if(above)t+=" "+n0(above.best-r.best)+(r.pos>10?" points to break into the top 10.":" points to catch #"+above.pos+".");
+          if(r.best>gg.score)t+=" (This game: "+n0(gg.score)+".)"}
+        if(rc)t+=" In "+esc(c.label)+" you're <b>#"+rc.pos+"</b> out of "+n0(rc.total)+".";pm(t)})
+     .catch(function(e){pm(((e&&e.msg)||"Couldn't post your score. Check the internet connection.")+" It is still saved on this device.")})}}
 
 /* ---------- confetti ---------- */
 function confetti(){if(reduce)return;var cv=$("#confetti"),cx=cv.getContext("2d"),W=cv.width=window.innerWidth,H=cv.height=window.innerHeight,cols=["#0072B2","#E69F00","#009E73","#CC79A7","#56B4E9","#D55E00"],P=[];
