@@ -1,9 +1,15 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Market Rush</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&display=swap">
+</head>
+<body>
 <style>
 /* Market Rush: a price-board arcade. Colourblind-safe palette (Okabe-Ito): blue for the brand and demand, orange for supply, bluish green and vermillion for right and wrong (always with a tick or cross too), reddish purple for highlights. */
 :root{
@@ -1002,7 +1008,7 @@ function lbBase(){return String(CONFIG.supabaseUrl).replace(/\/+$/,"")+"/rest/v1
 function lbHead(extra){var h={apikey:CONFIG.supabaseKey};if(!/^sb_/.test(CONFIG.supabaseKey))h.Authorization="Bearer "+CONFIG.supabaseKey;for(var k in extra)h[k]=extra[k];return h}
 function weekStart(){var now=new Date(Date.now()+8*3600e3),dow=(now.getUTCDay()+6)%7;return new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()-dow)-8*3600e3).toISOString()}
 function lbKey(n,c){return String(n).toLowerCase()+"|"+String(c||"").toLowerCase()}
-function lbFetch(period){var q="select=name,class,score&order=score.desc&limit=400"+(period==="week"?"&created_at=gte."+encodeURIComponent(weekStart()):"");
+function lbFetch(period){var q="select=name,score&order=score.desc&limit=400"+(period==="week"?"&created_at=gte."+encodeURIComponent(weekStart()):"");
   return fetch(lbBase()+"?"+q,{headers:lbHead({})}).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}).then(function(rows){var seen={},out=[];rows.forEach(function(r){var k=lbKey(r.name,r["class"]);if(!seen[k]){seen[k]=1;out.push(r)}});return out})}
 function lbList(el,rows,me){var top=rows.slice(0,10);el.innerHTML=top.length?top.map(function(r,i){var mine=me&&lbKey(r.name,r["class"])===me;return'<li class="'+(mine?"me":"")+'"><span class="r'+(i<3?" top":"")+'">'+(i+1)+'</span><span class="n">'+esc(r.name)+(r["class"]?'<small>'+esc(r["class"])+'</small>':"")+'</span><span class="s">'+Number(r.score).toLocaleString("en-AU")+'</span></li>'}).join(""):'<li><span class="r">-</span><span class="n" style="color:var(--dim)">No scores yet'+(LB.period==="week"?" this week":"")+'. Be the first!</span><span></span></li>'}
 function myKey(){return lbKey(SV.tag,"")}
@@ -1338,5 +1344,5 @@ window.__MR={BANK:BANK,GENS:GENS,scode:scode,state:function(){return G}};
 })();
 
 </script>
-
-</body></html>
+</body>
+</html>
