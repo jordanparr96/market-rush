@@ -1,15 +1,9 @@
-<!doctype html>
-<html lang="en-AU">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Market Rush</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&display=swap">
-</head>
-<body>
 <style>
 /* Market Rush: a price-board arcade. Colourblind-safe palette (Okabe-Ito): blue for the brand and demand, orange for supply, bluish green and vermillion for right and wrong (always with a tick or cross too), reddish purple for highlights. */
 :root{
@@ -974,7 +968,7 @@ var CYCLE=["quick","visual","interactive","quick","typed","visual","quick","inte
 "use strict";
 /* ---------- storage ---------- */
 var KEY="y8-market-rush-v1",SV={name:"",sound:false,scores:[],best:{}};
-try{var raw=JSON.parse(localStorage.getItem(KEY)||"null");if(raw&&typeof raw==="object"){SV.tag=raw.tag||"";SV.seen=Array.isArray(raw.seen)?raw.seen.slice(-120):[];SV.tagUsed=!!raw.tagUsed;SV.tagReg=!!raw.tagReg;SV.tagOwn=!!raw.tagOwn;SV.sound=!!raw.sound;SV.scores=Array.isArray(raw.scores)?raw.scores:[];SV.best=raw.best||{}}}catch(e){}
+try{var raw=JSON.parse(localStorage.getItem(KEY)||"null");if(raw&&typeof raw==="object"){SV.tag=raw.tag||"";SV.seen=Array.isArray(raw.seen)?raw.seen.slice(-120):[];SV.tagUsed=!!raw.tagUsed;SV.tagReg=!!raw.tagReg;SV.tagOwn=!!raw.tagOwn;SV.sound=!!raw.sound;SV.scores=Array.isArray(raw.scores)?raw.scores:[];SV.best=raw.best||{};if(raw.cls&&/^[A-Z0-9]{6}$/.test(raw.cls.code||"")&&raw.cls.label)SV.cls={code:raw.cls.code,label:String(raw.cls.label).slice(0,40)};if(typeof raw.srvBest==="number")SV.srvBest=raw.srvBest;if(typeof raw.srvWeek==="number")SV.srvWeek=raw.srvWeek}}catch(e){}
 var SEEN=null;function save(){try{localStorage.setItem(KEY,JSON.stringify(SV))}catch(e){}}
 SEEN=SV.seen||[];
 function $(s){return document.querySelector(s)}
@@ -1096,6 +1090,7 @@ $("#clsBtn").addEventListener("click",function(){var code=cleanCode($("#clsIn").
    .catch(function(){m.textContent="Can't reach the leaderboard right now. Try again in a minute."})});
 $("#clsIn").addEventListener("keydown",function(e){if(e.key==="Enter")$("#clsBtn").click()});
 $("#clsLeave").addEventListener("click",function(){SV.cls=null;save();paintCls();$("#clsMsg").textContent="You've left the class board. Your scores still count on the Year 8 board.";LB.scope="year";lbRefresh()});
+if(LB.on&&myCls())rpc("mr_class_label",{p_code:SV.cls.code}).then(function(label){if(label===null){SV.cls=null;save();paintCls();lbRefresh()}else if(label&&label!==SV.cls.label){SV.cls.label=String(label);save();paintCls();paintScope()}}).catch(function(){});
 paintCls();lbRefresh();ensureTag().then(function(){myBestRefresh();lbRefresh()});
 
 /* ---------- score code ---------- */
@@ -1415,5 +1410,5 @@ window.__MR={BANK:BANK,GENS:GENS,scode:scode,state:function(){return G}};
 })();
 
 </script>
-</body>
-</html>
+
+</body></html>
